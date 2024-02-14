@@ -1,5 +1,5 @@
 
-function legendSelect(myChart, seriseName, isSelect) {
+function legendSelect(myChart, seriseName, isSelect, isHighlight=true) {
 
     myChart.dispatchAction({
         type: 'downplay',
@@ -36,6 +36,10 @@ function legendSelect(myChart, seriseName, isSelect) {
     }
 
     _highlightLegend(seriseName, true);
+
+    if(!isHighlight) {
+        _downplayLegend();
+    }
 
 }
 

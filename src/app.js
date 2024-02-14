@@ -8,6 +8,11 @@ import handleVoice from './handleVoice'
 import singalCenterHandleUnit from './signalProcessor'
 import createLegend from './chart/renderLegend'
 import setOption from './chart/chartSetOption'
+import voiceGrammar from './voice/rules'
+import bubbleVoiceGrammar from './voice/bubbleRule'
+import controlsEvent from './controls'
+import createTimeline from "./timeline";
+import bubbleTimeline from "./bubbleTimeline";
 
 const video = document.querySelector("#video")
 const debug = new Stats();
@@ -25,6 +30,25 @@ const pageState = {
 let pageOriginData = null;
 let renderingMode = 'immediate';
 let currentChartOptionData = null;
+let viewOfStoryTimeline = null;
+
+const nextPage = [
+  "next page",
+  "nextpage",
+  "next slide",
+  "nextslide"
+]
+
+const previousPage = [
+  "previous page",
+  "previouspage",
+  "previous slide",
+  "previousslide",
+  "last page",
+  "lastpage",
+  "last slide",
+  "lastslide"
+]
 
 // async function renderChart(uid, slide) {
 //   try {
@@ -49,18 +73,78 @@ function gestureCallback(myChart) {
   }
 }
 
-function renderChart(option) {
+function renderChart(option, myChart) {
+
+    // render first page timeline
+    console.log('pageOriginData.pages[pageState.pageIndex].data', pageOriginData.pages[pageState.pageIndex].data);
+    let isBubble = JSON.parse(pageOriginData.pages[pageState.pageIndex].data).baseOption
+    if (!isBubble) {
+      viewOfStoryTimeline = createTimeline(pageOriginData.pages[pageState.pageIndex]);// create timeline info
+    } else {
+      viewOfStoryTimeline = bubbleTimeline.createTimeline(pageOriginData.pages[pageState.pageIndex]);// create timeline info
+      myChart.on('timelinechanged', function (params) {
+          if (params.currentIndex == 80) {
+            myChart.dispatchAction({
+              type: 'timelinePlayChange',
+              playState: false,
+            });
+          }
+      });
+    }
+
+    // save y axis range
+    // saveYAxisRange();
+
   // check the rendering mode: progressive or immediate
   if (option.customOption && option.customOption.mode === 'progressive') {
     renderingMode = 'progressive';
     option.customOption["progress_step"] = 0;
-    currentChartOptionData = {}
+    currentChartOptionData = {
+      "customOption": {"x_axis_show": false,
+                      "y_axis_show": false,
+                      "legend_show": false,
+                      "title_show": false,
+                      "data_show": false}   
+    }
   } else {
     renderingMode = 'immediate';
     currentChartOptionData = option;
-    setOption(myChart, JSON.parse(pageOriginData.pages[0].data));
-    createLegend(myChart);
+    setOption(myChart, option);
+    if (!isBubble) {
+      createLegend(myChart);
+    }
   }
+}
+
+function saveYAxisRange() {
+  const pages = pageOriginData.pages;
+  pages.forEach((page) => {
+    if (page.data) {
+      
+      const chartOption = JSON.parse(page.data);
+      if(chartOption.series && chartOption.series.length > 0) {
+        let max = 0;
+        let min = 0;
+        chartOption.series.forEach((element) => {
+          if (element.data && element.data.length > 0) {
+            max = Math.max(max, Math.max(...element.data));
+            min = Math.min(min, Math.min(...element.data));
+          }
+        })
+        if (chartOption.yAxis) {
+          chartOption.yAxis.max = max;
+          chartOption.yAxis.min = min;
+        } else {
+          chartOption.yAxis = {
+            max,
+            min
+          }
+        }
+      }
+      page.data = JSON.stringify(chartOption);
+    }
+  })
+  pageOriginData.pages = pages;
 }
 
 async function main() {
@@ -72,15 +156,17 @@ async function main() {
     return;
   }
   
-
+  controlsEvent();
+ 
 
   // get data from firebase, and render chart
   pageOriginData = await getData(urlParams.get('userId'), urlParams.get('slide'));
+
   const myChart = chartDisplay();
 
   if (pageOriginData.pages[0].data) {
     const firstChartOptionData = JSON.parse(pageOriginData.pages[0].data);
-    renderChart(firstChartOptionData);
+    renderChart(firstChartOptionData, myChart);
   } else {
     alert('Cannot find any chart data in the query string.');
   }
@@ -109,7 +195,8 @@ if ('webkitSpeechRecognition' in window) {
   console.log('Speech recognition supported');
   const recognition = new webkitSpeechRecognition();
   recognition.continuous = true; 
-  recognition.lang = 'cmn-Hans-CN'; 
+  // recognition.lang = 'cmn-Hans-CN';
+  recognition.lang = 'en-US'; 
   recognition.interimResults = true; 
 
   recognition.start(); 
@@ -127,7 +214,42 @@ if ('webkitSpeechRecognition' in window) {
           interimTranscript += event.results[i][0].transcript;
         }
       }
-      transcript = transcript.trim(); 
+      transcript = transcript.trim();
+      transcript = transcript.toLowerCase();
+      // handle numbers which are more than 1000
+      const numberRegex = /(\d{1,3}(,\d{3})*(\.\d+)*)/g;
+      transcript = transcript.replace(numberRegex, match => match.replace(/,/g, ''));
+
+      if (!JSON.parse(pageOriginData.pages[pageState.pageIndex].data).baseOption) {
+        voiceGrammar.basicParser(transcript, JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentChartOptionData, myChart, viewOfStoryTimeline);
+      } else {
+        // bubble chart
+        bubbleVoiceGrammar.basicParser(transcript, JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentChartOptionData, myChart, viewOfStoryTimeline);
+      }
+      
+
+      let isNextPage = nextPage.some(element => transcript.includes(element));
+      if (isNextPage) {
+        if (pageState.pageIndex < pageOriginData.pages.length - 1) {
+          pageState.pageIndex += 1;
+          myChart.clear();
+          renderChart(JSON.parse(pageOriginData.pages[pageState.pageIndex].data), myChart);
+        }
+      }
+
+      let isPreviousPage = previousPage.some(element => transcript.includes(element));
+      if (isPreviousPage) {
+        if (pageState.pageIndex > 0) {
+          pageState.pageIndex -= 1;
+          myChart.clear();
+          renderChart(JSON.parse(pageOriginData.pages[pageState.pageIndex].data), myChart);
+        }
+      }
+
+      document.getElementById('speech').innerHTML = interimTranscript.trim();
+
+
+
       // if (transcript.length > 0) {
       //   for (let i = 0; i < lastTranscripts.length; i++) {
       //     if (transcript.startsWith(lastTranscripts[i])) {
@@ -142,94 +264,94 @@ if ('webkitSpeechRecognition' in window) {
 
 
       // console.log('Recognized text:', transcript.trim());
-      document.getElementById('speech').innerHTML = interimTranscript.trim();
+     
 
-      if (transcript.toLowerCase().includes("展示图表".toLowerCase())) {
-        singalCenterHandleUnit('voice', 'show-chart', {},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
+      // if (transcript.toLowerCase().includes("展示图表".toLowerCase())) {
+      //   singalCenterHandleUnit('voice', 'show-chart', {},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
 
-        if (pageState.pageIndex < pageOriginData.pages.length - 1) {
-          pageState.pageIndex += 1;
-        }
+      //   if (pageState.pageIndex < pageOriginData.pages.length - 1) {
+      //     pageState.pageIndex += 1;
+      //   }
 
-      }
+      // }
 
-      if (transcript.toLowerCase().includes("展示图标".toLowerCase())) {
+      // if (transcript.toLowerCase().includes("展示图标".toLowerCase())) {
 
-        singalCenterHandleUnit('voice', 'show-chart', {},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data)});
+      //   singalCenterHandleUnit('voice', 'show-chart', {},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data)});
 
-        if (pageState.pageIndex < pageOriginData.pages.length - 1) {
-          pageState.pageIndex += 1;
-        }
+      //   if (pageState.pageIndex < pageOriginData.pages.length - 1) {
+      //     pageState.pageIndex += 1;
+      //   }
 
-      }
+      // }
 
       // if (transcript == '展示图表') {
       //   // singalCenterHandleUnit('voice', transcript, {});
       //   showChart.showChart(myChart, JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
       // }
-      if (transcript == '开始展示图表') {
-        pageState.pageIndex = 0;
-        myChart.setOption(JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
-      }
+      // if (transcript == '开始展示图表') {
+      //   pageState.pageIndex = 0;
+      //   myChart.setOption(JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
+      // }
 
-      if (transcript == '隐藏图表') {
-        myChart.clear();
-      }
+      // if (transcript == '隐藏图表') {
+      //   myChart.clear();
+      // }
 
-      if (transcript == '打开调试') {
-        document.getElementById('debug-info').style.display = 'block';
-      }
+      // if (transcript == '打开调试') {
+      //   document.getElementById('debug-info').style.display = 'block';
+      // }
 
-      if (transcript == '关闭调试') {
-        document.getElementById('debug-info').style.display = 'none';
-      }
+      // if (transcript == '关闭调试') {
+      //   document.getElementById('debug-info').style.display = 'none';
+      // }
 
 
-      if (transcript == '展示x轴') {
-        console.log('show x axis');
-        singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
-      }
+      // if (transcript == '展示x轴') {
+      //   console.log('show x axis');
+      //   singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
+      // }
 
-      if (transcript == '展示X轴') {
-        console.log('show x axis');
-        singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
-      }
+      // if (transcript == '展示X轴') {
+      //   console.log('show x axis');
+      //   singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
+      // }
 
-      if (transcript == 'x轴') {
-        console.log('show x axis');
-        singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
-      }
+      // if (transcript == 'x轴') {
+      //   console.log('show x axis');
+      //   singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
+      // }
 
-      if (transcript == 'X轴') {
-        console.log('show x axis');
-        singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
-      }
+      // if (transcript == 'X轴') {
+      //   console.log('show x axis');
+      //   singalCenterHandleUnit('voice', 'show-axis', {'axis': 'x'},  {myChart, chartdata: JSON.parse(pageOriginData.pages[pageState.pageIndex].data), currentOption: currentChartOptionData});
+      // }
 
-      if (transcript == '上一页') {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTimestamp < 1000) {
-          return;
-        }
-        lastTimestamp = currentTime;
-        if (pageState.pageIndex > 0) {
-          pageState.pageIndex -= 1;
-          myChart.clear();
-          myChart.setOption(JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
-        }
-      }
+      // if (transcript == '上一页') {
+      //   const currentTime = new Date().getTime();
+      //   if (currentTime - lastTimestamp < 1000) {
+      //     return;
+      //   }
+      //   lastTimestamp = currentTime;
+      //   if (pageState.pageIndex > 0) {
+      //     pageState.pageIndex -= 1;
+      //     myChart.clear();
+      //     myChart.setOption(JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
+      //   }
+      // }
 
-      if (transcript == '下一页') {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTimestamp < 1000) {
-          return;
-        }
-        lastTimestamp = currentTime;
-        if (pageState.pageIndex < pageOriginData.pages.length - 1) {
-          pageState.pageIndex += 1;
-          myChart.clear();
-          myChart.setOption(JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
-        }
-      }
+      // if (transcript == '下一页') {
+      //   const currentTime = new Date().getTime();
+      //   if (currentTime - lastTimestamp < 1000) {
+      //     return;
+      //   }
+      //   lastTimestamp = currentTime;
+      //   if (pageState.pageIndex < pageOriginData.pages.length - 1) {
+      //     pageState.pageIndex += 1;
+      //     myChart.clear();
+      //     myChart.setOption(JSON.parse(pageOriginData.pages[pageState.pageIndex].data));
+      //   }
+      // }
 
   };
 

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Demo</title>
+    <style>
+        .timeline-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 40px 0; /* 增加上方的空间以显示标签 */
+        }
+
+        .timeline {
+            display: flex;
+            align-items: center;
+            position: relative;
+            background-color: #ddd;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 5px solid #ddd;
+        }
+
+        .node {
+            position: relative;
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            background-color: #888;
+            margin: 0 40px;
+            cursor: pointer;
+        }
+
+        .node::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #888;
+        }
+
+        .highlight::before {
+            background-color: #ff5722;
+        }
+
+        .node-label {
+            position: absolute;
+            bottom: 100%; /* 确保标签出现在节点上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f8f8f8; /* 标签的背景色 */
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-bottom: 5px; /* 标签与节点之间的距离 */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* 为标签添加阴影效果 */
+        }
+    </style>
+</head>
+<body>
+    <div class="timeline-container">
+        <div class="timeline">
+            <div class="node">
+                <div class="node-label">Node 1</div>
+            </div>
+            <div class="node highlight">
+                <div class="node-label">Highlighted Node</div>
+            </div>
+            <div class="node">
+                <div class="node-label">Node 3</div>
+            </div>
+            <!-- ... 更多节点 -->
+        </div>
+    </div>
+</body>
+</html>

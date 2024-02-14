@@ -6,9 +6,9 @@ function hexToRgba(hex, alpha = 1) {
 }
 
 function createLegend(myChart) {
-    console.log(myChart)
+
     const options = myChart.getOption();
-    console.log(options);
+    console.log("legend--->", options);
     const colors = options.color;
     const legends = []
 
@@ -22,9 +22,13 @@ function createLegend(myChart) {
     }
 
     for (let i = 0; i < options.series.length; i++) {
+        let color = colors[i];
+        if (options.series[i].itemStyle && options.series[i].itemStyle.color) {
+            color = options.series[i].itemStyle.color;
+        }
         legends.push({
             name: options.series[i].name,
-            color: colors[i],
+            color: color,
         });
     }
 
@@ -48,8 +52,8 @@ function createLegend(myChart) {
     legendContainer.style.top = `-${legends.length*50}px`;
     legendContainer.style.left = '0';
     legendContainer.style.display = 'flex';
-    legendContainer.style.flexDirection = 'column'; // 设置flex布局方向为纵向
-    legendContainer.style.alignItems = 'center'; // 可选，设置子项在交叉轴上的对齐方式为居中
+    legendContainer.style.flexDirection = 'column'; 
+    legendContainer.style.alignItems = 'center';
 
 
 

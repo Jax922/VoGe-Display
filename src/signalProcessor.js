@@ -120,6 +120,12 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
     const isInLegendLeft = isInLegendArea(xLeft, yLeft);
     const isInLegendRight = isInLegendArea(xRight, yRight);
 
+    // two hands highlight
+    if (isInChartLeft && isInChartRight) {
+        _highlight(state.myChart, myOption, [leftHand,rightHand]);
+        return;
+    }
+
     // left hand
     if (isInLegendLeft) {
         _legendSelect(xLeft, yLeft, state.myChart);
@@ -129,7 +135,7 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
 
     if (isInChartLeft) {
         _tooltipShow(state.myChart, leftHand, true);
-        _highlight(state.myChart, myOption, leftHand);
+        _highlight(state.myChart, myOption, [leftHand]);
     }
 
     // right hand
@@ -138,7 +144,7 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
     }
     if (isInChartRight) {
         _tooltipShow(state.myChart, rightHand, true);
-        _highlight(state.myChart, myOption, rightHand);
+        _highlight(state.myChart, myOption, [rightHand]);
     }
 }
 
@@ -148,13 +154,12 @@ function _tooltipShow(myChart, hand, show) {
     chartOperaionAPI.tooltip(myChart, x, y, true);
 }
 
-function _highlight(myChart, myOption, hand) {
+function _highlight(myChart, myOption, hands) {
     // console.log('echartsCoord', seriesIndex);
     // handle highlight
     let seriesIdxs = []
     let dataIdxs = []
 
-    console.log(myOption);
     if (!myOption){
         return;
     }
@@ -162,15 +167,18 @@ function _highlight(myChart, myOption, hand) {
     const chartRect = chartContainer.getBoundingClientRect();
 
     for (let i = 0; i < myOption.series.length; i++) {
-        let temp = myChart.convertFromPixel({ seriesIndex: i }, [hand.keypoints[8].x - chartRect.left, hand.keypoints[8].y]);
-        if (temp) {
-            seriesIdxs.push(i);
-            dataIdxs.push(temp[0]);
-        }
+        hands.forEach((hand) => {
+            let temp = myChart.convertFromPixel({ seriesIndex: i }, [hand.keypoints[8].x - chartRect.left, hand.keypoints[8].y]);
+            if (temp) {
+                seriesIdxs.push(i);
+                dataIdxs.push(temp[0]);
+            }
+        })
     }
 
-
-    chartOperaionAPI.highlight(myChart, seriesIdxs, dataIdxs, true);
+    if(seriesIdxs.length > 0 || dataIdxs.length > 0) {
+        chartOperaionAPI.highlight(myChart, seriesIdxs, dataIdxs, true);
+    }
 }
 
 
@@ -223,13 +231,13 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
     const chartHeight = chartContainer.offsetHeight;
     const legendContainer = document.getElementById('legend-container');
 
-    if (!legendContainer) {
-        return;
-    }
+    // if (!legendContainer) {
+    //     return;
+    // }
 
-    const legendRect = legendContainer.getBoundingClientRect();
-    const legendWidth = legendContainer.offsetWidth;
-    const legendHeight = legendContainer.offsetHeight;
+    // const legendRect = legendContainer.getBoundingClientRect();
+    // const legendWidth = legendContainer.offsetWidth;
+    // const legendHeight = legendContainer.offsetHeight;
     
     if (!isMove) {
         initMoveGesturePosX = x;

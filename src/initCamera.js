@@ -8,7 +8,7 @@
 /* eslint-disable no-unused-vars */
 async function initCamera(video, width, height, fps) {
     const constraints = {
-        audio: false,
+        audio: true,
         video: {
             facingMode: "user",
             width: width,

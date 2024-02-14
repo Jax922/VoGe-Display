@@ -1,11 +1,12 @@
 
 const sizeFunction = function (x) {
     var y = Math.sqrt(x / 5e8) + 0.1;
-    return y * 150;
+    return y * 120;
 };
 
 
-function setOption(myChart, data) {
+function setOption(myChart, data, isMerge = false) {
+    console.log('setOption=====>', data);
     if (data && data.options) {
         for (let i = 0; i < data.options.length; i++) {
             for (let j = 0; j < data.options[i].series.length; j++) {
@@ -22,7 +23,11 @@ function setOption(myChart, data) {
         for (let j = 0; j < data.baseOption.series.length; j++) {
             if (data.baseOption.series[j].symbolSize) {
                 data.baseOption.series[j].symbolSize = function (val) {
-                    return sizeFunction(val[2]);
+                    if (val) {
+                        return sizeFunction(val[2]);
+                    } else {
+                        return 0;
+                    }
                 }
             }
         }
@@ -30,7 +35,6 @@ function setOption(myChart, data) {
 
 
     // resize chart 
-    console.log('data', data)
     if (data && data.customOption) {
         const chartContainer = document.getElementById('chart-container');
         const chartDom = document.getElementById('chartdom');
@@ -47,7 +51,7 @@ function setOption(myChart, data) {
     }
 
 
-    myChart.setOption(data);
+    myChart.setOption(data, isMerge);
 }
 
 export default setOption;

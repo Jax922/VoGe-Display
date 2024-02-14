@@ -5,21 +5,27 @@ function highlight(myChart, seriesIndex, dataIndex, isHighlight) {
         myChart.dispatchAction({
             type: 'downplay',
         });
-        for (let i = 0; i < seriesIndex.length; i++) {
-            myChart.dispatchAction({
-                type: 'highlight',
-                seriesIndex: seriesIndex[i],
-                dataIndex: dataIndex[i],
-            });
-        }
+        // for (let i = 0; i < seriesIndex.length; i++) {
+        //     myChart.dispatchAction({
+        //         type: 'highlight',
+        //         seriesIndex: seriesIndex[i],
+        //         dataIndex: dataIndex[i],
+        //     });
+        // }
+        myChart.dispatchAction({
+            type: 'highlight',
+            seriesIndex: seriesIndex,
+            dataIndex: dataIndex,
+        })
         // myChart.dispatchAction({
         //     type: 'highlight',
         //     seriesIndex: seriesIndex,
         //     dataIndex: dataIndex,
         // });
     } else {
-        
-    
+        myChart.dispatchAction({
+            type: 'downplay',
+        });
     }
 }
 

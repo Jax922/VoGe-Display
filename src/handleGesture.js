@@ -25,18 +25,16 @@ function handleGesture(myChart, leftHandInfo, rightHandInfo) {
     chartOperaionAPI.tooltip(myChart, 0, 0, false);
     // chartOperaionAPI.highlight(myChart, 0, 0, false);
 
+    const isVoiceHighlightActive = localStorage.getItem('voiceHighlightActive') === 'true';
+
     // point
     if (leftHandInfo.hand === null && rightHandInfo.hand === null) {
+        chartOperaionAPI.tooltip(myChart, 0, 0, false);
+        !isVoiceHighlightActive && chartOperaionAPI.highlight(myChart, 0, 0, false);
         return null;
     }
 
-    if (rightHandInfo.hand && rightHandInfo.gesture === 'point') {
-        action = 'point';
-    }
-
-    if (leftHandInfo.hand && leftHandInfo.gesture === 'point') {
-        action = 'point';
-    }
+    
 
     // zoom
     if (leftHandInfo.hand &&  leftHandInfo.gesture === 'point' && rightHandInfo.hand && rightHandInfo.gesture === 'point') {
@@ -52,13 +50,22 @@ function handleGesture(myChart, leftHandInfo, rightHandInfo) {
         action = 'move';
     }
 
+    // point
+    if (rightHandInfo.hand && rightHandInfo.gesture === 'point') {
+        action = 'point';
+    }
+
+    if (leftHandInfo.hand && leftHandInfo.gesture === 'point') {
+        action = 'point';
+    }
+
     // palm
     if (rightHandInfo.hand && rightHandInfo.gesture === 'palm') {
-        action = 'move';
+        // action = 'move';
     }
 
     if (leftHandInfo.hand && leftHandInfo.gesture === 'palm') {
-        action = 'move';
+        // action = 'move';
     }
 
 

@@ -9,6 +9,11 @@ function updateGesture(left, right) {
 }
 
 function showPointPosition(handName, x, y) {
+
+    if(localStorage.getItem('debugActive') !== 'true') {
+        return;
+    }
+
     let pointElem;
     if (handName === 'left') {
         pointElem = leftPointElem;
