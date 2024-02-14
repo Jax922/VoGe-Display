@@ -6,10 +6,10 @@ const pointDescription = new fp.GestureDescription("point");
 
 // thumb
 // pointDescription.addCurl(fp.Finger.Thumb, fp.FingerCurl.FullCurl, 1.0);
-// pointDescription.addCurl(fp.Finger.Thumb, fp.FingerCurl.HalfCurl, 1.0);
-// pointDescription.addDirection(fp.Finger.Thumb, fp.FingerDirection.VerticalUp, 1.0);
-// pointDescription.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalUpLeft, 1.0);
-// pointDescription.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalUpRight, 1.0);
+// pointDescription.addCurl(fp.Finger.Thumb, fp.FingerCurl.HalfCurl, 0.8);
+pointDescription.addDirection(fp.Finger.Thumb, fp.FingerDirection.VerticalUp, 1.0);
+pointDescription.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalUpLeft, 1.0);
+pointDescription.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalUpRight, 1.0);
 
 // index finger
 pointDescription.addCurl(fp.Finger.Index, fp.FingerCurl.NoCurl, 1.0);

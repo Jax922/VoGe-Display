@@ -89,6 +89,9 @@ function basicParser(text, chartOriginOption, chartCurrentOption, myChart, viewO
         }
     }
 
+    // title show
+    _titleNameShow(text, chartOriginOption, chartCurrentOption, myChart);
+
     chartCurrentOption = _checkContext(text, chartCurrentOption);
     
     if (chartCurrentOption.customOption["voiceContext"] === "none") {
@@ -233,7 +236,6 @@ function _createDataElem(chartOriginOption) {
         }
         _dataElems[name] = temp;
     }
-
     return _dataElems;
 
 }
@@ -241,13 +243,27 @@ function _createDataElem(chartOriginOption) {
 function _isDataElemExist(chartCurrentOption, text, myChart) {
     let matches = [];
     const firstCategoryKey = Object.keys(dataElems)[0]; 
+
     const xAxisOrder = Object.keys(dataElems[firstCategoryKey]);
 
     let isHighlightActive = false;
     let highlightDataIdx = [];
+    let newDataElems = {};
+    let isSpecificLegend = false;
+
+    for (let key in dataElems) {
+        if(text.toLowerCase().includes(key.toLowerCase())) {
+            isSpecificLegend = true;
+            newDataElems[key] = dataElems[key];
+        }
+    }
+
+    if (!isSpecificLegend) {
+        newDataElems = dataElems;
+    }
 
     xAxisOrder.forEach((item, index) => {
-        for (let category in dataElems) {
+        for (let category in newDataElems) {
             // for (let item in dataElems[category]) {
                 if (typeof item === "string") {
                     item = item.toLowerCase();
@@ -259,15 +275,23 @@ function _isDataElemExist(chartCurrentOption, text, myChart) {
                     continue;
                 }
 
+                // let newDataElemsKeys = Object.keys(newDataElems);
+
+
                 if(chartCurrentOption.series && chartCurrentOption.series.length > 0) {
-                    if (chartCurrentOption.series[0].data && chartCurrentOption.series[0].data.length > 0) {
-                        if (chartCurrentOption.series[0].data[index]) {
-                            // if the data has been shown, maybe @TODO highlight the data
-                            if (text.includes(item)) {
-                                isHighlightActive = true;
-                                highlightDataIdx.push(index);
+
+                    let chartCurrentOptionSeries = chartCurrentOption.series.filter(item => item.name === category);
+
+                    if (chartCurrentOptionSeries.length > 0) {
+                        if (chartCurrentOptionSeries[0].data && chartCurrentOptionSeries[0].data.length > 0) {
+                            if (chartCurrentOptionSeries[0].data[index]) {
+                                // if the data has been shown, maybe @TODO highlight the data
+                                if (text.includes(item)) {
+                                    isHighlightActive = true;
+                                    highlightDataIdx.push(index);
+                                }
+                                continue;
                             }
-                            continue;
                         }
                     }
                 }
@@ -307,7 +331,6 @@ function _set_x_axis_show(chartOriginOption, chartCurrentOption, myChart) {
 
     chartCurrentOption.customOption["x_axis_show"] = true;
     chartCurrentOption["xAxis"] = JSON.parse(JSON.stringify(chartOriginOption["xAxis"]));
-    chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
     chartCurrentOption["yAxis"] = chartCurrentOption["yAxis"] || defaultYAxis;
     chartCurrentOption["series"] = chartCurrentOption["series"] || [];
     chartCurrentOption["grid"] = chartOriginOption["grid"] || {};
@@ -334,7 +357,6 @@ function _set_x_axis_show_with_context(chartOriginOption, chartCurrentOption, my
             chartCurrentOption["xAxis"]["data"] = [];
         }
     }
-    chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
     chartCurrentOption["yAxis"] = chartCurrentOption["yAxis"] || defaultYAxis;
     chartCurrentOption["series"] = chartCurrentOption["series"] || [];
     chartCurrentOption["grid"] = chartOriginOption["grid"] || {};
@@ -480,6 +502,11 @@ function _showDataElements(chartOriginOption, chartCurrentOption, myChart, match
     }
 
     chartCurrentOption.customOption["data_show"] = true;
+
+    if (!chartCurrentOption.customOption.title_show) {
+        chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
+    }
+
     chartCurrentOption["xAxis"] = chartCurrentOption["xAxis"] || defaultXAxis;
     chartCurrentOption["yAxis"] = chartCurrentOption["yAxis"] || defaultYAxis;
     chartCurrentOption["grid"] = chartOriginOption["grid"] || {};
@@ -572,6 +599,51 @@ function _hightlightDataElem(myChart, chartCurrentOption, idx) {
     })
     
     chartOperaionAPI.highlight(myChart, seriesIdxs, dataIdxs, true);
+}
+
+// title show
+function _titleNameShow(text, chartOriginOption, chartCurrentOption, myChart) {
+
+    if(chartCurrentOption.customOption["title_show"] === true) {
+        return;
+    }
+
+    const titleName = chartOriginOption.title.text || "";
+    if (text == "" || titleName == "") {
+        return;
+    }
+
+    if(!containsAtLeastTwoWords(titleName.toLowerCase(), text.toLowerCase())) {
+        return;
+    }
+
+    chartCurrentOption.customOption["title_show"] = true;
+
+    if (!chartCurrentOption.title) {
+        chartCurrentOption.title = { };
+    }
+
+    chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
+
+    setOption(myChart, chartCurrentOption);
+}
+
+function containsAtLeastTwoWords(str1, str2) {
+    const words1 = str1.split(/\s+/);
+    const words2 = str2.split(/\s+/);
+  
+    let count = 0;
+  
+    for (let word of words2) {
+      if (words1.includes(word)) {
+        count++;
+      }
+      if (count >= 2) {
+        return true;
+      }
+    }
+  
+    return count >= 2;
 }
 
 export default { basicParser }

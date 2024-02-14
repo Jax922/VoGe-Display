@@ -279,13 +279,13 @@ function _data_elem_handle(text, chartOriginOption, chartCurrentOption, myChart)
        
         if (chartOriginOption.customOption.NLUMode == "hybrid") {
             (async () => {
-                const nlu_parse_res = await _nlu_parse(text, chartOriginOption, chartCurrentOption, myChart);
-                if (!nlu_parse_res) {
-                    _data_elem_play_processing(text, chartOriginOption, chartCurrentOption, myChart);
-                    _goBack(text, chartOriginOption, chartCurrentOption, myChart);
-                    _changeSpeedHandle(text, chartOriginOption, chartCurrentOption, myChart);
-                    _splitUpHandle(text, chartOriginOption, chartCurrentOption, myChart);
-                    _reuniteHandle(text, chartOriginOption, chartCurrentOption, myChart);
+                const isParse1 = _data_elem_play_processing(text, chartOriginOption, chartCurrentOption, myChart);
+                const isParse2 = _goBack(text, chartOriginOption, chartCurrentOption, myChart);
+                const isParse3 = _changeSpeedHandle(text, chartOriginOption, chartCurrentOption, myChart);
+                const isParse4 = _splitUpHandle(text, chartOriginOption, chartCurrentOption, myChart);
+                const isParse5 = _reuniteHandle(text, chartOriginOption, chartCurrentOption, myChart);
+                if (!isParse1 && !isParse2 && !isParse3 && !isParse4 && !isParse5) {
+                    const nlu_parse_res = await _nlu_parse(text, chartOriginOption, chartCurrentOption, myChart);
                 }
             })(); 
         } else {
@@ -343,15 +343,21 @@ function _data_elem_first_show(text, chartOriginOption, chartCurrentOption, myCh
 
 // data play processing, include play, pause tasks
 function _data_elem_play_processing(text, chartOriginOption, chartCurrentOption, myChart) {
+
     const playKeywords = ["play", "start", "start here", "play here", "playing", "starting", "begin", "beginning", "begin here", "beginning here"];
     if (playKeywords.some(element => text.includes(element))) {
+        _autoReunite(chartOriginOption, chartCurrentOption, myChart);
         _start_play(text, chartOriginOption, chartCurrentOption, myChart);
+        return true;
     }
 
     const pauseText = ["pause", "stop", "stop here", "pause here", "stopping", "pausing", "freeze", "holding", "hold"];
     if (pauseText.some(element => text.includes(element))) {
         _pause(myChart, text);
+        return true;
     }
+
+    return false;
 
 }
 
@@ -627,7 +633,7 @@ function containsAtLeastTwoWords(str1, str2) {
     }
   
     return count >= 2;
-  }
+}
 
 function _goBack(text, chartOriginOption, chartCurrentOption, myChart) {
     const keywords = ["back", "go back", "backing", "rewind", "rewinding", "backing to", "go back to", "back to", "Jump to", "Move", "Move to the year of", "Jump to the year of", "Go to the year of"]
@@ -636,9 +642,12 @@ function _goBack(text, chartOriginOption, chartCurrentOption, myChart) {
     }
 
     if (keywords.some(element => text.includes(element))) {
-
+        _autoReunite(chartOriginOption, chartCurrentOption, myChart);
         _gotoSpecificYear(text, chartOriginOption, chartCurrentOption, myChart)
+        return true;
     }
+
+    return false;
 }
 
 function _gotoSpecificYear(text, chartOriginOption, chartCurrentOption, myChart) {
@@ -684,9 +693,13 @@ function _changeSpeedHandle(text, chartOriginOption, chartCurrentOption, myChart
 
     if (speedup.some(element => text.includes(element))) {
         _changeSpeed(myChart, chartCurrentOption, true);
+        return true;
     } else if (speeddown.some(element => text.includes(element))) {
         _changeSpeed(myChart, chartCurrentOption, false);
+        return true;
     }
+
+    return false;
 
 }
 
@@ -696,10 +709,13 @@ function _changeSpeed(myChart, chartCurrentOption, isSpeedup) {
     if (originValue === undefined) {
         originValue = 1000;
     }
-    if (originValue <= 300) {
+    
+    const rate = isSpeedup ? 0.5 : 1.5;
+
+    if (originValue * rate < 500) {
         return; // limit the speed
     }
-    const rate = isSpeedup ? 0.5 : 1.5;
+
     chartCurrentOption.baseOption["timeline"].playInterval = originValue * rate;
     setOption(myChart, chartCurrentOption);
     myChart.dispatchAction({
@@ -719,7 +735,10 @@ function _splitUpHandle(text, chartOriginOption, chartCurrentOption, myChart) {
     
     if (splitup.some(element => text.includes(element))) {
         _splitUp( chartOriginOption, chartCurrentOption, myChart);
+        return true;
     }
+
+    return false;
 }
 
 function _splitUp(chartOriginOption, chartCurrentOption, myChart) {
@@ -728,15 +747,25 @@ function _splitUp(chartOriginOption, chartCurrentOption, myChart) {
 
     const splitData = chartOriginOption.customOption["splitData"][0];
 
-    if (!splitData) {
+    if (!splitData || chartCurrentOption.customOption["isSplited"]) {
         return;
     }
+
+    chartCurrentOption.customOption["isSplited"] = true;
+
 
     const splitObjName = splitData.name;
     const lastIdx = chartCurrentOption.options.length - 1;
     const year = splitData.index;
 
-    splitLastData = chartCurrentOption.options[lastIdx].series[0].data.filter(item => item[3] === splitObjName);
+    const copyLastData = JSON.parse(JSON.stringify(chartCurrentOption.options[lastIdx]));
+    const copySplitData = JSON.parse(JSON.stringify(splitData));
+
+    splitLastData = copyLastData.series[0].data.filter(item => item[3] === splitObjName);
+
+
+
+    copySplitData.data = splitLastData
 
     chartCurrentOption.options.forEach((item, idx) => {
         if(item.title.text === year) {
@@ -744,13 +773,20 @@ function _splitUp(chartOriginOption, chartCurrentOption, myChart) {
         }
     });
 
-    chartCurrentOption.options[lastIdx].series.push(splitData);
 
-    chartCurrentOption.baseOption.series.forEach((item, idx) => {
-        item.data[0].data = item.data[0].data.filter(item => item[3] !== splitObjName);
-    });
 
-    chartCurrentOption.baseOption.series.push(splitData);
+    //
+    chartCurrentOption.options[lastIdx].series.push(copySplitData);
+    chartCurrentOption.baseOption.series.push(copySplitData);
+
+    setOption(myChart, chartCurrentOption);
+    // _autoPause(myChart);
+
+    chartCurrentOption.options[lastIdx].series[chartCurrentOption.options[lastIdx].series.length - 1] = splitData;
+    chartCurrentOption.baseOption.series[chartCurrentOption.baseOption.series.length - 1] = splitData;
+
+    setOption(myChart, chartCurrentOption);
+    _autoPause(myChart);
 
     if (legendsColor.length < 5){
         legendsColor.push({
@@ -761,12 +797,44 @@ function _splitUp(chartOriginOption, chartCurrentOption, myChart) {
         });
     }
 
-    setOption(myChart, chartCurrentOption);
-    myChart.dispatchAction({
-        type: 'timelineChange',
-        currentIndex: 80
-    });
-    _autoPause(myChart);
+    // copyLastData.series[0].data = copyLastData.series[0].data.filter(item => item.name !== splitObjName);
+    // copyLastData.series.push(splitData);
+    // chartCurrentOption.options.push(copyLastData);
+
+    // const lastYear = chartCurrentOption.baseOption.timeline.data[chartCurrentOption.baseOption.timeline.data.length - 1];
+    // chartCurrentOption.baseOption.timeline.data.push(lastYear);
+
+    // myChart.dispatchAction({
+    //     type: 'timelineChange',
+    //     currentIndex: lastIdx+1
+    // });
+
+    // setOption(myChart, chartCurrentOption);
+    // _autoPause(myChart);
+
+    // chartCurrentOption.baseOption.series.forEach((item, idx) => {
+    //     item.data[0].data = item.data[0].data.filter(item => item[3] !== splitObjName);
+    // });
+
+
+    return;
+
+    // chartCurrentOption.options[lastIdx].series.push(splitData);
+    // copyLastData.series.push(splitData);
+    // chartCurrentOption.options.push(copyLastData)
+
+    // chartCurrentOption.baseOption.series.forEach((item, idx) => {
+    //     item.data[0].data = item.data[0].data.filter(item => item[3] !== splitObjName);
+    // });
+
+    // chartCurrentOption.baseOption.series.push(splitData);
+
+
+
+ 
+
+    // setOption(myChart, chartCurrentOption);
+
 
 }
 
@@ -780,12 +848,17 @@ function _reuniteHandle(text, chartOriginOption, chartCurrentOption, myChart) {
     
     if (reunite.some(element => text.includes(element))) {
         _reunite(chartOriginOption, chartCurrentOption, myChart);
+        return true;
     }
+
+    return false;
 }
 
 function _reunite(chartOriginOption, chartCurrentOption, myChart){
 
     _autoPause(myChart);
+
+    chartCurrentOption.customOption["isSplited"] = false;
 
     chartCurrentOption.options.forEach((item, idx) => {
         if(item.title.text === "2015") {
@@ -811,6 +884,7 @@ function _nlu_parse(text, chartOriginOption, chartCurrentOption, myChart) {
         if (parsedData && parsedData.intent && parsedData.intent.confidence > 0.8) {
             switch (parsedData.intent.name){
                 case "play":
+                    _autoReunite(chartOriginOption, chartCurrentOption, myChart);
                     _start_play(text, chartOriginOption, chartCurrentOption, myChart);
                     return true;
                 case "pause":
@@ -823,15 +897,23 @@ function _nlu_parse(text, chartOriginOption, chartCurrentOption, myChart) {
                     _changeSpeed(myChart, chartCurrentOption, false);
                     return true;
                 case "resume_play":
+                    _autoReunite(chartOriginOption, chartCurrentOption, myChart);
                     _start_play(text, chartOriginOption, chartCurrentOption, myChart);
                     return true;
                 case "rewind":
+                    _autoReunite(chartOriginOption, chartCurrentOption, myChart);
                     _gotoSpecificYear(text, chartOriginOption, chartCurrentOption, myChart);
                     return true;
             }
         }
         return false;
     })();
+}
+
+function _autoReunite(chartOriginOption, chartCurrentOption, myChart) {
+    if (chartCurrentOption.customOption["isSplited"]) {
+        _reunite(chartOriginOption, chartCurrentOption, myChart);
+    }
 }
 
 

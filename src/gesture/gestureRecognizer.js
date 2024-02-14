@@ -10,6 +10,7 @@ import pointDescription from './definition/pointing.js'
 import horizontalPalmDescription from './definition/horizontalPalm.js'
 import twoPointDescription from './definition/twopointing.js'
 import palmDescription from './definition/palm.js'
+import thumbPointDescription from './definition/thumbpoint.js'
 import DEBUG from '../debug/debug.js'
 
 const landmarkColors = {
@@ -34,6 +35,7 @@ async function createDetector() {
             modelType: "full",
             maxHands: 2,
             solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915`,
+            // solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/hands`,
         }
     )
 }
@@ -57,6 +59,7 @@ async function gestureHandleMain(gestureCallback, isDebug=false) {
         twoPointDescription,
         horizontalPalmDescription,
         palmDescription,
+        // thumbPointDescription,
     ]
    
     const GE = new fp.GestureEstimator(knownGestures)

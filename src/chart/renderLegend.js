@@ -8,7 +8,6 @@ function hexToRgba(hex, alpha = 1) {
 function createLegend(myChart) {
 
     const options = myChart.getOption();
-    console.log("legend--->", options);
     const colors = options.color;
     const legends = []
 
@@ -49,7 +48,7 @@ function createLegend(myChart) {
     legendContainer.style.width = '20%';
     // legendContainer.style.height = '50px';
     legendContainer.style.position = 'absolute';
-    legendContainer.style.top = `-${legends.length*50}px`;
+    legendContainer.style.top = `-${legends.length*60}px`;
     legendContainer.style.left = '0';
     legendContainer.style.display = 'flex';
     legendContainer.style.flexDirection = 'column'; 

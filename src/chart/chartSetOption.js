@@ -1,7 +1,7 @@
 
 const sizeFunction = function (x) {
     var y = Math.sqrt(x / 5e8) + 0.1;
-    return y * 120;
+    return y * 90;
 };
 
 

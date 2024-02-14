@@ -5,6 +5,7 @@ import createLegend from './chart/renderLegend';
 import { init } from '@tensorflow/tfjs-backend-wasm/dist/backend_wasm';
 
 let signalArray = [];
+const longTouchTime = 1000; // long touch time
 const signalWaitTime = 100; // wait 100ms to process signals
 let timer = null;
 let initMoveChartPosX = null;
@@ -27,12 +28,12 @@ let endZoomEventTimer = null;
 // singalData: 
 function singalCenterHandleUnit(type, action, singalData, state) {
     signalArray.push({ type, action, singalData });
-
+    processSignals(state);
     if (!timer) {
-        timer = setTimeout(() => {
-            processSignals(state);
-            timer = null;
-        }, signalWaitTime);
+        // timer = setTimeout(() => {
+        //     processSignals(state);
+        //     timer = null;
+        // }, signalWaitTime);
     }
 
 }
@@ -43,8 +44,21 @@ function processSignals(state) {
     const nonActionGestures = signalArray.filter((item) => item.action === null);
     const voices = signalArray.filter((item) => item.type === 'voice');
 
+    const pointGestures = actionGestures.filter(elem => elem.action === "point")
+
+    if (actionGestures.length === 0 || pointGestures.length === 0) {
+        localStorage.setItem('pointTouchTime', -1);
+    }
+
     if (voices.length === 0) {
         if (actionGestures.length !== 0) {
+            if (actionGestures[actionGestures.length - 1].action === "point") {
+
+                if(localStorage.getItem('pointTouchTime') == -1) {
+                    localStorage.setItem('pointTouchTime', new Date().getTime());
+                    localStorage.setItem('pointHandInfo', JSON.stringify(actionGestures[0].singalData));
+                }
+            }
             _gestureHandleEntry(actionGestures, state);
         }
     } else if (gestures.length === 0) {
@@ -57,9 +71,9 @@ function processSignals(state) {
     signalArray = []
 }
 
+// localStorage.setItem('pointTouchTime', new Date().getTime());
 // ========= gestures =========
 function _gestureHandleEntry(gestures, state) {
-
     switch (gestures[gestures.length - 1].action) {
         case 'point':
             _pointHandle(gestures[0].singalData, state);
@@ -67,17 +81,23 @@ function _gestureHandleEntry(gestures, state) {
         case 'move':
             _moveHandle(gestures[0].singalData, state);
         case 'zoom':
+            console.log('zoom');
             _zoomHandle(gestures[0].singalData, state);
         default:
             break;
     }
+
 }
 
 // is in chart area
 function isInChartArea(x, y) {
     const chartContainer = document.getElementById('chart-container');
     const chartRect = chartContainer.getBoundingClientRect();
-    if (x >= chartRect.left && x <= chartRect.right && y >= (chartRect.top + 50) && y <= chartRect.bottom) {
+    const left = chartRect.left - 20;
+    const top = chartRect.top - 70;
+    const right = chartRect.right + 20;
+    const bottom = chartRect.bottom + 20;
+    if (x >= left && x <= right && y >= top && y <= bottom) {
         return true;
     }
     return false;
@@ -113,6 +133,96 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
     if (rightHand) {
         xRight = rightHand.keypoints[8].x;
         yRight = rightHand.keypoints[8].y;
+    }
+
+    // handle for clear chart
+    if (leftHandInfo.gesture === 'palm' && rightHandInfo.gesture === 'palm') {
+        if (leftHandInfo.hand && rightHandInfo.hand) {
+            let distance = Math.sqrt((xLeft - xRight) * (xLeft - xRight) + (yLeft - yRight) * (yLeft - yRight));
+            console.log("palm distance", distance);
+            if (distance < 100) {
+                state.myChart.clear();
+            }
+        }
+    }
+
+    let nowTouchTime = new Date().getTime();
+    let pointTouchTime = -1;
+    if (localStorage.getItem('pointTouchTime') != -1) {
+        pointTouchTime =  nowTouchTime - localStorage.getItem('pointTouchTime');
+    } 
+
+
+
+    // handle for clear chart
+    console.log("palm touch time", pointTouchTime);
+    if (pointTouchTime <= longTouchTime) {
+        const lastPointHandInfo = JSON.parse(localStorage.getItem("pointHandInfo"));
+        if (leftHandInfo.gesture === 'palm' && leftHandInfo.hand ) {
+            console.log("left x", xLeft, "left y", yLeft)
+            if (xLeft < 10) {
+                state.myChart.clear();
+            }
+            // let moveOffsetX1 = 0
+            // let moveOffsetY1 = 0
+
+            // if (leftHand && lastPointHandInfo.leftHandInfo.gesture && lastPointHandInfo.leftHandInfo.hand) {
+            //     moveOffsetX1 = xLeft - lastPointHandInfo.leftHandInfo.hand.keypoints[8].x;
+            //     moveOffsetY1 = yLeft - lastPointHandInfo.leftHandInfo.hand.keypoints[8].y;
+            // }
+            // let distance1 = Math.sqrt(moveOffsetX1*moveOffsetX1 + moveOffsetY1*moveOffsetY1);
+            // console.log("distance1", distance1)
+            // if (distance1 > 400) {
+            //     // alert()
+            //     // state.myChart.clear();
+            // }
+
+        }
+
+        if (rightHandInfo.gesture === 'palm' && rightHandInfo.hand) {
+            console.log("right x", xRight, "right y", yRight)
+            // let moveOffsetX2 = 0
+            // let moveOffsetY2 = 0
+            // if (rightHand && lastPointHandInfo.rightHandInfo.gesture && lastPointHandInfo.rightHandInfo.hand) {
+            //     moveOffsetX2 = xRight - lastPointHandInfo.rightHandInfo.hand.keypoints[8].x;
+            //     moveOffsetY2 = yRight - lastPointHandInfo.rightHandInfo.hand.keypoints[8].y;
+            // }
+            // let distance2 = Math.sqrt(moveOffsetX2*moveOffsetX2 + moveOffsetY2*moveOffsetY2);
+            // console.log("distance2", distance2)
+            // if (distance2 > 400) {
+            //     // alert()
+            //     // state.myChart.clear();
+            // }
+            if (xRight > 1270) {
+                state.myChart.clear();
+            }
+        }
+    }
+
+
+
+
+    
+    
+    // if point touch time over long touch time 
+    if (pointTouchTime > longTouchTime) {
+        
+
+
+        // if (distance1 > 50 || distance2 > 50) {
+        //     _moveHandle({ leftHandInfo, rightHandInfo }, state);
+        // }
+
+        if (rightHand && leftHand && lastPointHandInfo.leftHandInfo.hand && lastPointHandInfo.rightHandInfo.hand) {
+            // let distance = Math.sqrt((xLeft - xRight) * (xLeft - xRight) + (yLeft - yRight) * (yLeft - yRight));
+            // if (distance > 100) {
+                _zoomHandle({ leftHandInfo, rightHandInfo }, state);
+            // }
+
+        } else {
+            _moveHandle({ leftHandInfo, rightHandInfo }, state)
+        }
+       
     }
 
     const isInChartLeft = isInChartArea(xLeft, yLeft);
@@ -210,10 +320,10 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
     const hand = leftHandInfo.hand || rightHandInfo.hand;
     let x = null;
     let y = null;
-    console.log(hand);
+
     if (hand) {
-        x = hand.keypoints[9].x;
-        y = hand.keypoints[9].y;
+        x = hand.keypoints[8].x;
+        y = hand.keypoints[8].y;
     } else {
         return;
     }
@@ -231,13 +341,13 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
     const chartHeight = chartContainer.offsetHeight;
     const legendContainer = document.getElementById('legend-container');
 
-    // if (!legendContainer) {
-    //     return;
-    // }
-
-    // const legendRect = legendContainer.getBoundingClientRect();
-    // const legendWidth = legendContainer.offsetWidth;
-    // const legendHeight = legendContainer.offsetHeight;
+    let legendWidth = 0;
+    let legendHeight = 0;
+    if (legendContainer) {
+        const legendRect = legendContainer.getBoundingClientRect();
+        legendWidth = legendContainer.offsetWidth;
+        legendHeight = legendContainer.offsetHeight;
+    }
     
     if (!isMove) {
         initMoveGesturePosX = x;
@@ -246,7 +356,7 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
         initMoveChartPosY = chartRect.top;
         setTimeout(() => {
             isMove = true;
-        }, 500);
+        }, 300);
     } else {
         const offsetX = x - initMoveGesturePosX;
         const offsetY = y - initMoveGesturePosY;
@@ -256,21 +366,21 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
 
         console.log(newLeft, newTop);
 
-        // if (newLeft < 50) {
-        //     newLeft = 50;
-        // }
+        if (newLeft < 0) {
+            newLeft = 0;
+        }
 
-        // if (newLeft > (windowWidth - chartWidth - 50)) {
-        //     newLeft = windowWidth - chartWidth - 50;
-        // }
+        if (newLeft > (1300 - chartWidth )) {
+            newLeft = 1300 - chartWidth;
+        }
 
-        // if (newTop < (50 + legendHeight)) {
-        //     newTop = 50 + legendHeight;
-        // }
+        if (newTop < (10 + legendHeight)) {
+            newTop = 10 + legendHeight;
+        }
 
-        // if (newTop > (windowHeight - 50 - chartHeight)) { 
-        //     newTop = windowHeight - 50 - chartHeight;
-        // }
+        if (newTop > (720 - chartHeight)) { 
+            newTop = 720 - chartHeight;
+        }
 
         chartContainer.style.left = `${newLeft}px`;
         chartContainer.style.top = `${newTop}px`;
@@ -291,21 +401,22 @@ function _zoomHandle({ leftHandInfo, rightHandInfo }, state) {
         return;
     }
 
-    const isInChartLeft = isInChartArea(leftHand.keypoints[8].x, leftHand.keypoints[8].y);
-    const isInChartRight = isInChartArea(rightHand.keypoints[8].x, rightHand.keypoints[8].y);
+    // const isInChartLeft = isInChartArea(leftHand.keypoints[8].x, leftHand.keypoints[8].y);
+    // const isInChartRight = isInChartArea(rightHand.keypoints[8].x, rightHand.keypoints[8].y);
 
-    if(!isInChartLeft || !isInChartRight) {
-        return;
-    }
+    // if(!isInChartLeft || !isInChartRight) {
+    //     return;
+    // }
 
     if(!isZoom) {
         initZoomHandPosition.leftX = leftHand.keypoints[8].x;
         initZoomHandPosition.leftY = leftHand.keypoints[8].y;
         initZoomHandPosition.rightX = rightHand.keypoints[8].x;
         initZoomHandPosition.rightY = rightHand.keypoints[8].y;
-        setTimeout(() => {
-            isZoom = true;
-        }, 2000);
+        // setTimeout(() => {
+        //     isZoom = true;
+        // }, 1000);
+        isZoom = true;
     } else {
         const leftX = leftHand.keypoints[8].x;
         const leftY = leftHand.keypoints[8].y;
@@ -342,6 +453,15 @@ function _zoomHandle({ leftHandInfo, rightHandInfo }, state) {
         let newWidth = chartWidth * scaleX;
         let newHeight = chartHeight * scaleY;
 
+
+        if (newWidth > 2000) {
+            newWidth = 2000;
+        }
+
+        if (newHeight > 720) {
+            newHeight = 720;
+        }
+
         const newLeft = chartRect.left - (newWidth - chartWidth) / 2;
         const newTop = chartRect.top - (newHeight - chartHeight) / 2;
 
@@ -361,7 +481,7 @@ function _zoomHandle({ leftHandInfo, rightHandInfo }, state) {
         endZoomEventTimer && clearTimeout(endMoveEventTimer);
         endZoomEventTimer = setTimeout(() => {
             isZoom = false;
-        }, 1000);
+        }, 300);
     }
    
 }
@@ -424,13 +544,6 @@ function _showChart(gestures, voices, state, type) {
 
     // no hands
     if (gestureData === null) {
-        // chartContainer.style.left = `${chartPosX}px`;
-        // chartContainer.style.top = `${chartPosY}px`;
-        // chartContainer.style.width = `${chartWidth}px`;
-        // chartContainer.style.height = `${chartHeight}px`;
-        // chartDom.style.width = `${chartWidth}px`;
-        // chartDom.style.height = `${chartHeight}px`;
-        // state.myChart.resize();
         state.myChart.setOption(state.chartdata);
         createLegend(state.myChart);
         return;

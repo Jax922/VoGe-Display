@@ -34,20 +34,13 @@ function handleGesture(myChart, leftHandInfo, rightHandInfo) {
         return null;
     }
 
-    
-
-    // zoom
-    if (leftHandInfo.hand &&  leftHandInfo.gesture === 'point' && rightHandInfo.hand && rightHandInfo.gesture === 'point') {
-        action = 'zoom';
-    }
-
     // twopoint
     if (rightHandInfo.hand && rightHandInfo.gesture === 'twopoint') {
-        action = 'move';
+        action = 'point';
     }
 
     if (leftHandInfo.hand && leftHandInfo.gesture === 'twopoint') {
-        action = 'move';
+        action = 'point';
     }
 
     // point
@@ -61,13 +54,22 @@ function handleGesture(myChart, leftHandInfo, rightHandInfo) {
 
     // palm
     if (rightHandInfo.hand && rightHandInfo.gesture === 'palm') {
-        // action = 'move';
+        action = 'point';
     }
 
     if (leftHandInfo.hand && leftHandInfo.gesture === 'palm') {
-        // action = 'move';
+        action = 'point';
     }
 
+    // // thumb point
+    // if (rightHandInfo.hand && rightHandInfo.gesture === 'thumb-point') {
+    //     action = 'thumb-point';
+    // }
+
+    // zoom
+    // if (leftHandInfo.hand &&  leftHandInfo.gesture === 'point' && rightHandInfo.hand && rightHandInfo.gesture === 'point') {
+    //     action = 'zoom';
+    // }
 
     // switch (action) {
     //     case 'zoom':
