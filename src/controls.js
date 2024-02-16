@@ -12,6 +12,14 @@ const stopButton = document.getElementById('record-stop');
 const recordBtn = document.getElementById("recordButton");
 
 const timelineBtn = document.getElementById("timelineButton");
+const svgElement = document.querySelectorAll('.icon-svg path');
+
+function _setSvgElementColor(color) {
+    svgElement.forEach((elem) => {
+        elem.style.fill = color;
+    });
+
+}
 
 function controlsEvent() {
     const debugBtn = document.getElementById("debugButton");
@@ -21,9 +29,11 @@ function controlsEvent() {
         if (timelineContainer.style.display === 'block') {
             timelineContainer.style.display = 'none';
             timelineBtn.style.color = 'gray';
+            _setSvgElementColor('gray');
         } else {
             timelineContainer.style.display = 'block';
             timelineBtn.style.color = '#0056b3';
+            _setSvgElementColor('#0056b3');
         }
     });
 

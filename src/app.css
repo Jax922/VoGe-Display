@@ -98,6 +98,10 @@
   margin: 10px 5px; 
 }
 
+.icon-svg {
+  color: grey;
+}
+
 .countdown {
   display: none; 
   font-size: 180px; 
