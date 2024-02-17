@@ -1,13 +1,31 @@
 
-const sizeFunction = function (x) {
+let sizeFunction = function (x) {
     var y = Math.sqrt(x / 5e8) + 0.1;
     return y * 90;
 };
 
 
+
+function calculateBubbleSize(minValue, maxValue, minSize, maxSize) {
+
+    return function (x) {
+      const normalized = (x - minValue) / (maxValue - minValue);
+      return normalized * (maxSize - minSize) + minSize;
+    }
+  
+}
+
 function setOption(myChart, data, isMerge = false) {
     console.log('setOption=====>', data);
     if (data && data.options) {
+        // if (data.customOption.maxValue) {
+        //     sizeFunction = calculateBubbleSize(data.customOption.minValue, data.customOption.maxValue, data.customOption.minSize, data.customOption.maxSize);
+        //   } else {
+        //     sizeFunction = function (x) {
+        //       var y = Math.sqrt(x / 5e8) + 0.1;
+        //       return y * 80;
+        //     };
+        // }
         for (let i = 0; i < data.options.length; i++) {
             for (let j = 0; j < data.options[i].series.length; j++) {
                 if (data.options[i].series[j].symbolSize) {
@@ -20,6 +38,14 @@ function setOption(myChart, data, isMerge = false) {
     }
 
     if (data && data.baseOption) {
+        // if (data.customOption.maxValue) {
+        //     sizeFunction = calculateBubbleSize(data.customOption.minValue, data.customOption.maxValue, data.customOption.minSize, data.customOption.maxSize);
+        //   } else {
+        //     sizeFunction = function (x) {
+        //       var y = Math.sqrt(x / 5e8) + 0.1;
+        //       return y * 80;
+        //     };
+        // }
         for (let j = 0; j < data.baseOption.series.length; j++) {
             if (data.baseOption.series[j].symbolSize) {
                 data.baseOption.series[j].symbolSize = function (val) {

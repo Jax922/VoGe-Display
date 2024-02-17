@@ -119,6 +119,11 @@ function _set_x_axis_show(chartOriginOption, chartCurrentOption, myChart) {
         return;
     }
 
+    chartCurrentOption.customOption = JSON.parse(JSON.stringify(chartOriginOption.customOption));
+
+    
+
+
     _updateCustomOption(chartOriginOption, chartCurrentOption);
 
     chartCurrentOption.customOption["x_axis_show"] = true;
