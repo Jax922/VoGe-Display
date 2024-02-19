@@ -157,8 +157,8 @@ async function main() {
   }
   
   controlsEvent();
+  localStorage.setItem('debugActive', false);
  
-
   // get data from firebase, and render chart
   pageOriginData = await getData(urlParams.get('userId'), urlParams.get('slide'));
 

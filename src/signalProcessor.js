@@ -200,7 +200,10 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
     }
 
 
-
+    const isInChartLeft = isInChartArea(xLeft, yLeft);
+    const isInChartRight = isInChartArea(xRight, yRight);
+    const isInLegendLeft = isInLegendArea(xLeft, yLeft);
+    const isInLegendRight = isInLegendArea(xRight, yRight);
 
     
     
@@ -220,15 +223,16 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
             // }
 
         } else {
-            _moveHandle({ leftHandInfo, rightHandInfo }, state)
+            if (!isInLegendLeft && !isInLegendRight) {
+                // two hands are not in the legend area
+                _moveHandle({ leftHandInfo, rightHandInfo }, state)
+            }
+            
         }
        
     }
 
-    const isInChartLeft = isInChartArea(xLeft, yLeft);
-    const isInChartRight = isInChartArea(xRight, yRight);
-    const isInLegendLeft = isInLegendArea(xLeft, yLeft);
-    const isInLegendRight = isInLegendArea(xRight, yRight);
+    
 
     // two hands highlight
     if (isInChartLeft && isInChartRight) {
