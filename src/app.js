@@ -156,13 +156,14 @@ async function main() {
     return;
   }
   
-  controlsEvent();
   localStorage.setItem('debugActive', false);
  
   // get data from firebase, and render chart
   pageOriginData = await getData(urlParams.get('userId'), urlParams.get('slide'));
 
   const myChart = chartDisplay();
+
+  controlsEvent(myChart);
 
   if (pageOriginData.pages[0].data) {
     const firstChartOptionData = JSON.parse(pageOriginData.pages[0].data);

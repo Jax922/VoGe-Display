@@ -1,3 +1,6 @@
+
+import recordVideo from "./recordVideo";
+
 let mediaRecorder;
 let recordedBlobs;
 let startTime;
@@ -10,9 +13,11 @@ const startButton = document.getElementById('record-play');
 const pauseButton = document.getElementById('record-pause');
 const stopButton = document.getElementById('record-stop');
 const recordBtn = document.getElementById("recordButton");
+const chartElem = document.getElementById('chart-container');
 
 const timelineBtn = document.getElementById("timelineButton");
 const svgElement = document.querySelectorAll('.icon-svg path');
+const chartContainer = document.getElementById('chart-container');
 
 function _setSvgElementColor(color) {
     svgElement.forEach((elem) => {
@@ -21,7 +26,7 @@ function _setSvgElementColor(color) {
 
 }
 
-function controlsEvent() {
+function controlsEvent(myChart) {
     const debugBtn = document.getElementById("debugButton");
 
     timelineBtn.addEventListener('click', () => {
@@ -67,7 +72,7 @@ function controlsEvent() {
             }
             recordBtn.setAttribute('data-status', 'on');
             recordBtn.style.color = '#0056b3';
-            _countDown();
+            _countDown(myChart);
             
             // document.getElementById('record-info').style.display = 'block';
         } else {
@@ -103,9 +108,9 @@ function controlsEvent() {
 
 }
 
-function _countDown(){
+function _countDown(myChart){
     var countdownElement = document.getElementById('countdown');
-    var timeLeft = 10; 
+    var timeLeft = 5; 
 
     countdownElement.innerHTML = timeLeft;
     countdownElement.style.display = 'flex'; 
@@ -116,13 +121,13 @@ function _countDown(){
         if (timeLeft <= 0) {
             clearInterval(timer);
             countdownElement.style.display = 'none';
-            countdownElement.innerHTML = 10;
-            _startRecord();
+            countdownElement.innerHTML = 5;
+            _startRecord(myChart);
         }
     }, 1000);
 }
 
-function _startRecord() {
+function _startRecord(myChart) {
     const recordBtn = document.getElementById("recordButton");
     recordBtn.setAttribute('have-record', 'yes');
     recordBtn.setAttribute('record-status', 'ongoing');
@@ -137,30 +142,32 @@ function _startRecord() {
     recordInfo.style.display = 'flex';
     recordStop.style.display = 'flex';
 
-    _recordVideo();
+    // _recordVideo(myChart);
+    captureVideoAndChart(myChart);
 }
 
-async function _recordVideo() {
+async function _recordVideo(myChart) {
     // try {
         // const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         // video.srcObject = stream;
 
-        recordedBlobs = [];
-        mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: 'video/webm' });
+        // recordedBlobs = [];
+        // mediaRecorder = new MediaRecorder(video.srcObject, { mimeType: 'video/webm' });
 
-        mediaRecorder.ondataavailable = (event) => {
-            console.log("record--->", event);
-            if (event.data && event.data.size > 0) {
-                recordedBlobs.push(event.data);
-            }
-        };
+        // mediaRecorder.ondataavailable = (event) => {
+        //     console.log("record--->", event);
+        //     if (event.data && event.data.size > 0) {
+        //         recordedBlobs.push(event.data);
+        //     }
+        // };
 
-        mediaRecorder.onerror = (event) => {
-            console.error('MediaRecorder error:', event);
-        };
+        // mediaRecorder.onerror = (event) => {
+        //     console.error('MediaRecorder error:', event);
+        // };
 
-        mediaRecorder.start(1000);
-        console.log('MediaRecorder started', mediaRecorder);
+        // mediaRecorder.start(1000);
+        // console.log('MediaRecorder started', mediaRecorder);
+        recordVideo.startRecording();
         startTime = Date.now();
         recordInterval = setInterval(updateRecordTime, 1000);
 
@@ -171,6 +178,88 @@ async function _recordVideo() {
     // } catch (error) {
     //     console.error('Error accessing media devices:', error);
     // }
+}
+
+// function updateChartImage() {
+//     const newDataURL = myChart.getDataURL();
+//     if (newDataURL !== chartDataURL) {
+//         chartDataURL = newDataURL;
+//         chartImage.src = chartDataURL;
+//     }
+// }
+
+
+async function captureVideoAndChart(myChart) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.offsetWidth; 
+    canvas.height = video.offsetHeight; 
+    const ctx = canvas.getContext('2d');
+
+    let chartImage = new Image();
+    let chartDataURL = ""; 
+
+    function updateChartImage() {
+        if (!myChart || !myChart.getOption()) {
+            return;
+        }
+        const newDataURL = myChart.getDataURL();
+        if (newDataURL !== chartDataURL) {
+            chartDataURL = newDataURL;
+            chartImage.src = chartDataURL;
+        }
+    }
+
+
+    const stream = canvas.captureStream();
+    const audioStream = video.captureStream().getAudioTracks()[0];
+    if (audioStream) {
+        stream.addTrack(audioStream);
+    }
+    recordedBlobs = [];
+    mediaRecorder  = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+    console.log("audioStream--->", audioStream);
+
+    mediaRecorder.ondataavailable = (event) => {
+        console.log("record--->", event);
+        if (event.data && event.data.size > 0) {
+            recordedBlobs.push(event.data);
+        }
+    };
+
+    mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+    };
+
+    function draw() {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // ctx.restore();
+        // let chartImage = new Image();
+        
+        const windowWidth = window.innerWidth;
+        const windowOffsetLeft = (windowWidth - 1280) / 2
+        const leftValue = chartContainer.offsetLeft
+        const topValue = chartContainer.offsetTop
+        ctx.drawImage(chartImage, leftValue, topValue, chartContainer.offsetWidth, chartContainer.offsetHeight); 
+        updateChartImage();
+        // chartImage.onload = function() {  };
+        // chartImage.src = myChart.getDataURL();
+        requestAnimationFrame(draw); // 持续绘制
+    }
+
+    draw(); 
+    mediaRecorder.start(1);
+    console.log('MediaRecorder started', mediaRecorder);
+    startTime = Date.now();
+    recordInterval = setInterval(updateRecordTime, 1000);
+
+    startButton.disabled = true;
+    pauseButton.disabled = false;
+    stopButton.disabled = false;
+    recordInfo.style.display = 'block';
 }
 
 function _recordPause() {
@@ -196,7 +285,6 @@ function _recordStop() {
     recordBtn.setAttribute('data-status', 'off');
     recordTime.textContent = 0;
     stopButton.style.display = 'none';
-
 
     const blob = new Blob(recordedBlobs, { type: 'video/webm' });
     const url = URL.createObjectURL(blob);

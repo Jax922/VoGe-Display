@@ -76,6 +76,10 @@ function setOption(myChart, data, isMerge = false) {
         }
     }
 
+    // remove legend for line chart
+    if (data && data.legend) {
+        data.legend.show = false;
+    }
 
     myChart.setOption(data, isMerge);
 }

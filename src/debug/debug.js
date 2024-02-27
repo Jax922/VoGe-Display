@@ -21,9 +21,12 @@ function showPointPosition(handName, x, y) {
         pointElem = rightPointElem;
     }
 
+    const windowWidth = window.innerWidth;
+    const windowOffsetLeft = (windowWidth-1280) / 2;
+
     pointElem.style.display = 'block';
     pointElem.classList.add('debug-point');
-    pointElem.style.left = `${x}px`;
+    pointElem.style.left = `${x+windowOffsetLeft}px`;
     pointElem.style.top = `${y}px`;
     document.body.appendChild(pointElem);
 }

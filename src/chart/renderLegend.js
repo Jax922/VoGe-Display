@@ -14,11 +14,11 @@ function createLegend(myChart) {
     
     console.log('legend', options)
 
-    if (options.legend) {
-        if (options.legend.length > 0 && options.legend[0].show === false) {
-            return;
-        }
-    }
+    // if (options.legend) {
+    //     if (options.legend.length > 0 && options.legend[0].show === false) {
+    //         return;
+    //     }
+    // }
 
     for (let i = 0; i < options.series.length; i++) {
         let color = colors[i];

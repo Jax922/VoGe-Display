@@ -138,7 +138,18 @@ function basicParser(text, chartOriginOption, chartCurrentOption, myChart, viewO
         let showDataElem = _isDataElemExist(chartCurrentOption, text, myChart);
 
         if (showDataElem.length > 0) {
-            _showDataElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
+            if(chartOriginOption.customOption.chartType === "line") {
+                let lineShowingMode = chartOriginOption.customOption.lineMode || "more";
+                if (lineShowingMode === "more") {
+                    _showLineDataMoreElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
+                }
+                if (lineShowingMode === "one") {
+                    _showDataElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
+                }
+            }
+            if (chartOriginOption.customOption.chartType === "bar") {
+                _showBarDataElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
+            }
             createLegend(myChart);
         }
     }
@@ -644,6 +655,125 @@ function containsAtLeastTwoWords(str1, str2) {
     }
   
     return count >= 2;
+}
+
+function _showBarDataElements(chartOriginOption, chartCurrentOption, myChart, matches) {
+    if (matches.length === 0) {
+        return;
+    }
+    let defaultSeries = [];
+    Object.keys(dataElems).forEach(category => {
+        defaultSeries.push({name: category});
+    });
+
+    chartCurrentOption["series"] = chartCurrentOption["series"] || defaultSeries;
+
+    for(let i = 0; i < matches.length; i++) {
+        let match = matches[i];
+        let serie = chartOriginOption["series"].find(item => item.name === match.category);
+        
+        // let dataCopy = serie.data.slice(0, match.index + 1);
+        let dataCopy = serie.data[match.index];
+        let serieCopy = JSON.parse(JSON.stringify(serie));
+
+
+        serieCopy.data = chartCurrentOption["series"] && chartCurrentOption["series"].length > 0 ? chartCurrentOption["series"][0].data : [];
+        serieCopy.data[match.index] = dataCopy;
+
+        // let isFind = false;
+        // chartCurrentOption["series"].forEach((item, index) => {
+        //     if (item.name === match.category) {
+        //         isFind = true;
+        //         chartCurrentOption["series"][index] = serieCopy;
+        //     }
+        // });
+        if (!chartCurrentOption["series"]) {
+            chartCurrentOption["series"] = [];
+        }
+        chartCurrentOption["series"][0] = serieCopy;
+ 
+        // if (!isFind) {
+        //     chartCurrentOption["series"].push(serieCopy);
+        // }
+    }
+
+    chartCurrentOption.customOption["data_show"] = true;
+
+    if (!chartCurrentOption.customOption.title_show) {
+        chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
+    }
+
+    chartCurrentOption["xAxis"] = chartCurrentOption["xAxis"] || defaultXAxis;
+    chartCurrentOption["yAxis"] = chartCurrentOption["yAxis"] || defaultYAxis;
+    chartCurrentOption["grid"] = chartOriginOption["grid"] || {};
+    chartCurrentOption["tooltip"] = chartOriginOption["tooltip"] || {};
+
+    chartCurrentOption["series"] = chartCurrentOption["series"].filter(item => item.type && item.data && item.data.length > 0);
+ 
+    setOption(myChart, chartCurrentOption);
+}
+
+function _showLineDataMoreElements(chartOriginOption, chartCurrentOption, myChart, matches) {
+    if (matches.length === 0) {
+        return;
+    }
+    let defaultSeries = [];
+    Object.keys(dataElems).forEach(category => {
+        defaultSeries.push({name: category});
+    });
+
+    chartCurrentOption["series"] = chartCurrentOption["series"] || defaultSeries;
+
+    for(let i = 0; i < matches.length; i++) {
+        let match = matches[i];
+        let serie = chartOriginOption["series"].find(item => item.name === match.category);
+        
+        let dataCopy = serie.data.slice(0, match.index + 1);
+        let serieCopy = JSON.parse(JSON.stringify(serie));
+
+        serieCopy.data = dataCopy;
+
+        // let isFind = false;
+        // chartCurrentOption["series"].forEach((item, index) => {
+        //     if (item.name === match.category) {
+        //         isFind = true;
+        //         chartCurrentOption["series"][index] = serieCopy;
+        //     }
+        // });
+        if (!chartCurrentOption["series"] || chartCurrentOption["series"].length === 0) {
+            let allSeriesCopy = JSON.parse(JSON.stringify(chartOriginOption["series"]));
+            allSeriesCopy.forEach(item => {
+                item.data = [];
+            })
+            chartCurrentOption["series"] = allSeriesCopy;
+        }
+
+        chartCurrentOption["series"].forEach((item, index) => {
+            if (item.name === match.category) {
+                chartCurrentOption["series"][index] = serieCopy;
+            }
+        });
+
+        // chartCurrentOption["series"].push(serieCopy);
+        // if (!isFind) {
+        //     chartCurrentOption["series"].push(serieCopy);
+        // }
+    }
+
+    chartCurrentOption.customOption["data_show"] = true;
+
+    if (!chartCurrentOption.customOption.title_show) {
+        chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
+    }
+
+    chartCurrentOption["xAxis"] = chartCurrentOption["xAxis"] || defaultXAxis;
+    chartCurrentOption["yAxis"] = chartCurrentOption["yAxis"] || defaultYAxis;
+    chartCurrentOption["grid"] = chartOriginOption["grid"] || {};
+    chartCurrentOption["tooltip"] = chartOriginOption["tooltip"] || {};
+
+    chartCurrentOption["series"] = chartCurrentOption["series"].filter(item => item.type && item.data && item.data.length > 0);
+ 
+    setOption(myChart, chartCurrentOption);
 }
 
 export default { basicParser }

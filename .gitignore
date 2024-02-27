@@ -34,3 +34,6 @@ gesture_recognition/MP_Data
 
 .cache
 dist
+
+node_modules.zip
+node_modules

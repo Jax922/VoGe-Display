@@ -19,11 +19,6 @@
     height: 80px;
   }
 
-  #main {
-    position: relative;
-    margin: 0;
-  }
-
   #canvas-wrapper {
     position: relative;
   }
@@ -58,23 +53,25 @@
     <div id="stats"></div>
   </div>
   <div id="main">
+    <div id="video-chart">
+      <div id="chart-container">
     
-    <div id="chart-container">
-    
-    </div>
-    <div class="c-container">
-      <div class="canvas-wrapper" >
-        <video id="video" playsinline style="
-          -webkit-transform: scaleX(-1);
-          transform: scaleX(-1);
-          /* visibility: hidden; */
-          width: 1280px;
-          height: 720px;
-          ">
-        </video>
-        <canvas id="output" ></canvas>
+      </div>
+      <div class="c-container" id="video-con">
+        <div class="canvas-wrapper" >
+          <video id="video" playsinline style="
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
+            /* visibility: hidden; */
+            width: 1280px;
+            height: 720px;
+            ">
+          </video>
+          <canvas id="output" ></canvas>
+        </div>
       </div>
     </div>
+
     <div class="timeline-container">
       <div class="timeline-content">
         <div class="timeline-nodes-container">
@@ -171,6 +168,7 @@
     10
 
   </div>
+  <canvas id="background-canvas" style="display: none;"></canvas>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
@@ -189,6 +187,8 @@
 
 <!-- <script src="src/fingerpose.js"></script> -->
 <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+<script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+<script src="https://www.webrtc-experiment.com/html2canvas.min.js"></script>
 
 <script src="src/app.js"></script>
 
