@@ -19,6 +19,36 @@ const timelineBtn = document.getElementById("timelineButton");
 const svgElement = document.querySelectorAll('.icon-svg path');
 const chartContainer = document.getElementById('chart-container');
 
+let firstLegendCapture = true;
+let legendCanvas = null
+
+let chartContainerInfo = {};
+let legendContainerInfo = [];
+
+
+//  disappear gesture control
+const disappearCheckedBtn = document.getElementById('disappear');
+
+// if (localStorage.getItem('disappearGesture') === 'yes') {
+//     disappearCheckedBtn.checked = true;
+// } else {
+//     disappearCheckedBtn.checked = false;
+// }
+
+// init
+localStorage.setItem('disappearGesture', 'no');
+
+disappearCheckedBtn.addEventListener('click', (e) => {
+    const isChecked = e.target.checked;
+    if (isChecked) {
+        localStorage.setItem('disappearGesture', 'yes');
+    } else {
+        localStorage.setItem('disappearGesture', 'no');
+    }
+});
+// ===============================
+
+
 function _setSvgElementColor(color) {
     svgElement.forEach((elem) => {
         elem.style.fill = color;
@@ -188,12 +218,85 @@ async function _recordVideo(myChart) {
 //     }
 // }
 
+function legendNeedToCapture(newChartContainerInfo, newLegendContainerInf) {
+    const chartChanged = chartContainerInfo.width !== newChartContainerInfo.width || chartContainerInfo.height !== newChartContainerInfo.height || chartContainerInfo.left !== newChartContainerInfo.left || chartContainerInfo.top !== newChartContainerInfo.top;
+    const legendChanged = legendContainerInfo.length !== newLegendContainerInf.length || legendContainerInfo.some((item, index) => { return item.border !== newLegendContainerInf[index].border; });
+
+    return chartChanged || legendChanged;
+}
+
+async function captureLegendAndDrawOnCanvas(ctx) {
+    const legendElement = document.getElementById('legend-container'); 
+
+    if (!legendElement) {
+        return;
+    }
+
+
+    const newChartContainerInfo = {
+        width: chartContainerInfo.width,
+        height: chartContainerInfo.height,
+        left: chartContainerInfo.left,
+        top: chartContainerInfo.top
+    }
+
+    const newLegendContainerInfo = [];
+    const legendItems = document.getElementsByClassName('legend-items');
+    for (let i = 0; i < legendItems.length; i++) {
+        newLegendContainerInfo.push({
+            border: legendItems[i].style.border
+        });
+     }
+
+    const isChanged = legendNeedToCapture(newChartContainerInfo, newLegendContainerInfo);
+
+    if (!isChanged && !firstLegendCapture) {
+        return;
+    }
+
+    // update chartContainerInfo and legendContainerInfo
+    chartContainerInfo = newChartContainerInfo;
+    legendContainerInfo = newLegendContainerInfo;
+
+    firstLegendCapture = false;
+    
+    legendCanvas = await html2canvas(legendElement, {
+        backgroundColor: null,
+    });
+
+    const legendPosX = legendElement.offsetLeft;
+    const legendPosY = legendElement.offsetTop;
+
+    console.log("legendPosX--->", legendPosX);
+    console.log("legendPosY--->", legendPosY);
+    console.log("chartContainerInfo--->", chartContainerInfo);
+    
+}
+
 
 async function captureVideoAndChart(myChart) {
     const canvas = document.createElement('canvas');
     canvas.width = video.offsetWidth; 
     canvas.height = video.offsetHeight; 
     const ctx = canvas.getContext('2d');
+
+    const legendElement = document.getElementById('legend-container'); 
+
+    chartContainerInfo = {
+        width: chartContainer.offsetWidth,
+        height: chartContainer.offsetHeight,
+        left: chartContainer.offsetLeft,
+        top: chartContainer.offsetTop
+    };
+
+    if (legendElement && legendElement.style.display !== 'none') {
+        const legendItems = document.getElementsByClassName('legend-items');
+        for (let i = 0; i < legendItems.length; i++) {
+            legendContainerInfo.push({
+                border: legendItems[i].style.border
+            });
+        }
+    }
 
     let chartImage = new Image();
     let chartDataURL = ""; 
@@ -208,7 +311,7 @@ async function captureVideoAndChart(myChart) {
             chartImage.src = chartDataURL;
         }
     }
-
+    // const legendElement = document.getElementById('legend-container'); 
 
     const stream = canvas.captureStream();
     const audioStream = video.captureStream().getAudioTracks()[0];
@@ -238,6 +341,17 @@ async function captureVideoAndChart(myChart) {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         // ctx.restore();
         // let chartImage = new Image();
+
+        captureLegendAndDrawOnCanvas(ctx);
+
+        let legendOffsetTop = -120;
+        if (legendElement && legendElement.offsetTop) {
+            legendOffsetTop = legendElement.offsetTop;
+        }
+
+        if (legendCanvas) {
+            ctx.drawImage(legendCanvas, chartContainer.offsetLeft, chartContainer.offsetTop+legendOffsetTop);
+        }
         
         const windowWidth = window.innerWidth;
         const windowOffsetLeft = (windowWidth - 1280) / 2

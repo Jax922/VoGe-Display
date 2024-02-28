@@ -60,7 +60,7 @@ function _highlightLegend(seriesIndex, isHighlight) {
     console.log(legend.style.backgroundColor);
 
     if (isHighlight) {
-        legend.style.border = '3px dashed #ccc';
+        legend.style.border = '3px solid #ccc';
     } else {
         legend.style.border = '';
     }

@@ -137,15 +137,20 @@ function basicParser(text, chartOriginOption, chartCurrentOption, myChart, viewO
          // show data elements detection
         let showDataElem = _isDataElemExist(chartCurrentOption, text, myChart);
 
+        if(chartOriginOption.customOption.chartType === "line") {
+            let lineShowingMode = chartOriginOption.customOption.lineMode || "more";
+            if (lineShowingMode === "one") {
+                _showLineSingleDataElements(text, chartOriginOption, chartCurrentOption, myChart, showDataElem);
+            }
+        }
+
         if (showDataElem.length > 0) {
             if(chartOriginOption.customOption.chartType === "line") {
                 let lineShowingMode = chartOriginOption.customOption.lineMode || "more";
                 if (lineShowingMode === "more") {
                     _showLineDataMoreElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
                 }
-                if (lineShowingMode === "one") {
-                    _showDataElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
-                }
+                
             }
             if (chartOriginOption.customOption.chartType === "bar") {
                 _showBarDataElements(chartOriginOption, chartCurrentOption, myChart, showDataElem);
@@ -504,6 +509,10 @@ function _showDataElements(chartOriginOption, chartCurrentOption, myChart, match
             if (item.name === match.category) {
                 isFind = true;
                 chartCurrentOption["series"][index] = serieCopy;
+                // chartCurrentOption.customOption["line_data_group"] = {
+                //     category: match.category,
+                //     index: match.index
+                // }
             }
         });
 
@@ -528,6 +537,90 @@ function _showDataElements(chartOriginOption, chartCurrentOption, myChart, match
     setOption(myChart, chartCurrentOption);
 }
 
+function _showLineSingleDataElements(text, chartOriginOption, chartCurrentOption, myChart, matches) {
+
+    let defaultSeries = [];
+    Object.keys(dataElems).forEach(category => {
+        defaultSeries.push({name: category});
+    });
+    chartCurrentOption["series"] = chartCurrentOption["series"] || defaultSeries;
+    
+    // check the line data group
+    let dataGroups = [];
+    chartOriginOption["series"].forEach((item, index) => {
+        dataGroups.push({category: item.name, index: index});
+    });
+
+    dataGroups.forEach((item, index) => {
+        text = text.toLowerCase();
+        if (text.includes(item.category.toLowerCase())) {
+            chartCurrentOption.customOption["line_data_group"] = {
+                category: item.category,
+                categoryIndex: item.index
+            }
+        }
+    });
+
+    if (chartCurrentOption.customOption["line_data_group"] && chartCurrentOption.customOption["line_data_group"].category) {
+        let category = chartCurrentOption.customOption["line_data_group"].category;
+        let categoryIndex = chartCurrentOption.customOption["line_data_group"].categoryIndex;
+        let filterMatches = matches.filter(item => item.category === category);
+
+        for(let i = 0; i < filterMatches.length; i++) {
+            let match = filterMatches[i];
+            let serie = chartOriginOption["series"].find(item => item.name === match.category);
+            
+            let dataCopy = serie.data.slice(0, match.index + 1);
+            let serieCopy = JSON.parse(JSON.stringify(serie));
+    
+            serieCopy.data = dataCopy;
+
+            if (!chartCurrentOption["series"] || chartCurrentOption["series"].length === 0) {
+                let allSeriesCopy = JSON.parse(JSON.stringify(chartOriginOption["series"]));
+                allSeriesCopy.forEach(item => {
+                    item.data = [];
+                })
+                chartCurrentOption["series"] = allSeriesCopy;
+            }
+
+            chartCurrentOption["series"][categoryIndex] = serieCopy;
+    
+            // chartCurrentOption["series"].forEach((item, index) => {
+            //     if (item.name === category) {
+            //         chartCurrentOption["series"][index] = serieCopy;
+            //     }
+            // });
+
+        }
+
+        
+        // let dataCopy = serie.data.slice(0, index + 1);
+        // let serieCopy = JSON.parse(JSON.stringify(serie));
+
+        // serieCopy.data = dataCopy;
+
+        // chartCurrentOption["series"][categoryIndex] = serieCopy;
+
+        
+    }   else {
+        return;
+    }
+
+    chartCurrentOption.customOption["data_show"] = true;
+
+    if (!chartCurrentOption.customOption.title_show) {
+        chartCurrentOption.title = JSON.parse(JSON.stringify(chartOriginOption.title));
+    }
+
+    chartCurrentOption["xAxis"] = chartCurrentOption["xAxis"] || defaultXAxis;
+    chartCurrentOption["yAxis"] = chartCurrentOption["yAxis"] || defaultYAxis;
+    chartCurrentOption["grid"] = chartOriginOption["grid"] || {};
+    chartCurrentOption["tooltip"] = chartOriginOption["tooltip"] || {};
+
+    chartCurrentOption["series"] = chartCurrentOption["series"].filter(item => item.type && item.data);
+ 
+    setOption(myChart, chartCurrentOption);
+}
 
 function _checkContext(text, chartCurrentOption) {
     const lastContext = chartCurrentOption.customOption["voiceContext"] || "";

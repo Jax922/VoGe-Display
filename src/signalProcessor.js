@@ -141,17 +141,7 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
         yRight = rightHand.keypoints[8].y;
     }
 
-    // handle for clear chart
-    // can open in show demo processing
-    // if (leftHandInfo.gesture === 'palm' && rightHandInfo.gesture === 'palm') {
-    //     if (leftHandInfo.hand && rightHandInfo.hand) {
-    //         let distance = Math.sqrt((xLeft - xRight) * (xLeft - xRight) + (yLeft - yRight) * (yLeft - yRight));
-    //         console.log("palm distance", distance);
-    //         if (distance < 100) {
-    //             state.myChart.clear();
-    //         }
-    //     }
-    // }
+    
 
     let nowTouchTime = new Date().getTime();
     let pointTouchTime = -1;
@@ -167,42 +157,42 @@ function _pointHandle({ leftHandInfo, rightHandInfo }, state) {
     if (pointTouchTime <= longTouchTime) {
         if (leftHandInfo.gesture === 'palm' && leftHandInfo.hand ) {
             console.log("left x", xLeft, "left y", yLeft)
-            // if (xLeft < 10) {
-            //     state.myChart.clear();
-            // }
-            // let moveOffsetX1 = 0
-            // let moveOffsetY1 = 0
+            if (xLeft < 10) {
+                state.myChart.clear();
+            }
+            let moveOffsetX1 = 0
+            let moveOffsetY1 = 0
 
-            // if (leftHand && lastPointHandInfo.leftHandInfo.gesture && lastPointHandInfo.leftHandInfo.hand) {
-            //     moveOffsetX1 = xLeft - lastPointHandInfo.leftHandInfo.hand.keypoints[8].x;
-            //     moveOffsetY1 = yLeft - lastPointHandInfo.leftHandInfo.hand.keypoints[8].y;
-            // }
-            // let distance1 = Math.sqrt(moveOffsetX1*moveOffsetX1 + moveOffsetY1*moveOffsetY1);
-            // console.log("distance1", distance1)
-            // if (distance1 > 400) {
-            //     // alert()
-            //     // state.myChart.clear();
-            // }
+            if (leftHand && lastPointHandInfo.leftHandInfo.gesture && lastPointHandInfo.leftHandInfo.hand) {
+                moveOffsetX1 = xLeft - lastPointHandInfo.leftHandInfo.hand.keypoints[8].x;
+                moveOffsetY1 = yLeft - lastPointHandInfo.leftHandInfo.hand.keypoints[8].y;
+            }
+            let distance1 = Math.sqrt(moveOffsetX1*moveOffsetX1 + moveOffsetY1*moveOffsetY1);
+            console.log("distance1", distance1)
+            if (distance1 > 400) {
+                // alert()
+                // state.myChart.clear();
+            }
 
         }
 
         if (rightHandInfo.gesture === 'palm' && rightHandInfo.hand) {
             console.log("right x", xRight, "right y", yRight)
-            // let moveOffsetX2 = 0
-            // let moveOffsetY2 = 0
-            // if (rightHand && lastPointHandInfo.rightHandInfo.gesture && lastPointHandInfo.rightHandInfo.hand) {
-            //     moveOffsetX2 = xRight - lastPointHandInfo.rightHandInfo.hand.keypoints[8].x;
-            //     moveOffsetY2 = yRight - lastPointHandInfo.rightHandInfo.hand.keypoints[8].y;
-            // }
-            // let distance2 = Math.sqrt(moveOffsetX2*moveOffsetX2 + moveOffsetY2*moveOffsetY2);
-            // console.log("distance2", distance2)
-            // if (distance2 > 400) {
-            //     // alert()
-            //     // state.myChart.clear();
-            // }
-            // if (xRight > 1270) {
-            //     state.myChart.clear();
-            // }
+            let moveOffsetX2 = 0
+            let moveOffsetY2 = 0
+            if (rightHand && lastPointHandInfo.rightHandInfo.gesture && lastPointHandInfo.rightHandInfo.hand) {
+                moveOffsetX2 = xRight - lastPointHandInfo.rightHandInfo.hand.keypoints[8].x;
+                moveOffsetY2 = yRight - lastPointHandInfo.rightHandInfo.hand.keypoints[8].y;
+            }
+            let distance2 = Math.sqrt(moveOffsetX2*moveOffsetX2 + moveOffsetY2*moveOffsetY2);
+            console.log("distance2", distance2)
+            if (distance2 > 400) {
+                // alert()
+                // state.myChart.clear();
+            }
+            if (xRight > 1270) {
+                state.myChart.clear();
+            }
         }
     }
 
@@ -342,6 +332,22 @@ function _unLegendSelect(myChart) {
 function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
     
     const hand = leftHandInfo.hand || rightHandInfo.hand;
+
+    const leftHand = leftHandInfo.hand;
+    const rightHand = rightHandInfo.hand;
+    let xLeft = -1000;
+    let yLeft = -1000;
+    let xRight = -1000;
+    let yRight = -1000;
+    if (leftHand) {
+        xLeft = leftHand.keypoints[8].x;
+        yLeft = leftHand.keypoints[8].y;
+    }
+    if (rightHand) {
+        xRight = rightHand.keypoints[8].x;
+        yRight = rightHand.keypoints[8].y;
+    }
+
     let x = null;
     let y = null;
 
@@ -418,6 +424,62 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
             isMove = false;
         }, 500);
     }
+
+    // handle for clear chart
+    // can open in show demo processing
+    // disappear gesture
+    const disappearGesture = localStorage.getItem('disappearGesture') || 'no';
+    if (disappearGesture === 'yes') {
+        // clap gesture
+        if (leftHandInfo.gesture === 'palm' && rightHandInfo.gesture === 'palm') {
+            if (leftHandInfo.hand && rightHandInfo.hand) {
+                let distance = Math.sqrt((xLeft - xRight) * (xLeft - xRight) + (yLeft - yRight) * (yLeft - yRight));
+                console.log("palm distance", distance);
+                if (distance < 100) {
+                    state.myChart.clear();
+                    const legendCon = document.getElementById('legend-container');
+                    legendCon.style.display = 'none';
+                }
+            }
+        }
+
+        // swipe gesture
+        if (leftHandInfo.gesture === 'palm' && leftHandInfo.hand ) {
+            console.log("left x", xLeft, "left y", yLeft)
+            if (xLeft < 270) {
+                state.myChart.clear();
+                const legendCon = document.getElementById('legend-container');
+                legendCon.style.display = 'none';
+            }
+
+            if (xLeft > 1270) {
+                state.myChart.clear();
+                const legendCon = document.getElementById('legend-container');
+                legendCon.style.display = 'none';
+            }
+            
+
+        }
+
+        if (rightHandInfo.gesture === 'palm' && rightHandInfo.hand) {
+            console.log("right x", xRight, "right y", yRight)
+
+            if (xRight < 270) {
+                state.myChart.clear();
+                const legendCon = document.getElementById('legend-container');
+                legendCon.style.display = 'none';
+            }
+
+            if (xRight > 1270) {
+                state.myChart.clear();
+                state.myChart.clear();
+                const legendCon = document.getElementById('legend-container');
+                legendCon.style.display = 'none';
+            }
+        }
+
+    }
+
 }
 
 // zoom event
