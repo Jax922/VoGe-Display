@@ -7,6 +7,7 @@ const timelineContainer = document.querySelector('.timeline-container');
 const timelineScriptContainer = document.querySelector('.timeline-script');
 const timelineNodes = document.querySelector('.timeline-nodes');
 const timelineScript = document.querySelector('.timeline-script-content');
+const timelineScriptNext = document.querySelector('.timeline-script-content-next');
 
 function createTimeline(page) {
 
@@ -24,6 +25,7 @@ function createTimeline(page) {
 
   // render timeline script
   timelineScript.textContent = viewOfStoryTimeline[0].script; // default script
+  timelineScriptNext.textContent = viewOfStoryTimeline[1].script; // default next script
 
   timelineLessInfobtn.addEventListener('click', () => {
     timelineContainer.style.height = "80px";

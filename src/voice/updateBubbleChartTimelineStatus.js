@@ -1,5 +1,6 @@
 const timelineNodes = document.querySelector('.timeline-nodes');
 const timelineScript = document.querySelector('.timeline-script-content');
+const timelineScriptNext = document.querySelector('.timeline-script-content-next');
 
 function updateBubbleChartTimeline(chartCurrentOption, viewOfStoryTimeline, text, myChart) {
 
@@ -15,14 +16,14 @@ function updateBubbleChartTimeline(chartCurrentOption, viewOfStoryTimeline, text
     })
 
     if (chartCurrentOption.customOption.x_axis_show) {
-        updateTimelineNodeStyle("X-Axis");
-        timelineScript.textContent = viewOfStoryTimeline[1].script;
+        updateTimelineNodeStyle("X-Axis", viewOfStoryTimeline);
+        // timelineScript.textContent = viewOfStoryTimeline[1].script;
         chartCurrentOption.customOption.timelineNodeIdx = 1;
     }
 
     if (chartCurrentOption.customOption.y_axis_show) {
-        updateTimelineNodeStyle("Y-Axis");
-        timelineScript.textContent = viewOfStoryTimeline[2].script;
+        updateTimelineNodeStyle("Y-Axis", viewOfStoryTimeline);
+        // timelineScript.textContent = viewOfStoryTimeline[2].script;
         chartCurrentOption.customOption.timelineNodeIdx = 2;
     }
 
@@ -47,14 +48,14 @@ function updateBubbleChartTimeline(chartCurrentOption, viewOfStoryTimeline, text
     const rightMatched = findClosestMatch(matches, chartCurrentOption.customOption.timelineNodeIdx);
 
     if (rightMatched) {
-        updateTimelineNodeStyle(rightMatched.name);
-        timelineScript.textContent = viewOfStoryTimeline[rightMatched.index].script;
+        updateTimelineNodeStyle(rightMatched.name, viewOfStoryTimeline);
+        // timelineScript.textContent = viewOfStoryTimeline[rightMatched.index].script;
         chartCurrentOption.customOption.timelineNodeIdx = rightMatched.index;
 
         if(rightMatched.index === viewOfStoryTimeline.length - 2) {
             setTimeout(() => {
-                updateTimelineNodeStyle("Ending");
-                timelineScript.textContent = viewOfStoryTimeline[viewOfStoryTimeline.length - 1].script;
+                updateTimelineNodeStyle("Ending", viewOfStoryTimeline);
+                // timelineScript.textContent = viewOfStoryTimeline[viewOfStoryTimeline.length - 1].script;
                 chartCurrentOption.customOption.timelineNodeIdx = viewOfStoryTimeline.length - 1;
             }, 10000);
         }
@@ -63,7 +64,7 @@ function updateBubbleChartTimeline(chartCurrentOption, viewOfStoryTimeline, text
 }
 
 
-function updateTimelineNodeStyle(nodeName) {
+function updateTimelineNodeStyle(nodeName, viewOfStoryTimeline) {
     const timelineNodeItems = document.querySelectorAll('.timeline-node');
     const timelineNodeLabels = document.querySelectorAll('.timeline-node-label');
     timelineNodeItems.forEach(item => {
@@ -79,6 +80,27 @@ function updateTimelineNodeStyle(nodeName) {
             timelineNodeLabels[idx].classList.add("timeline-node-label-highlight");
         }
     })
+
+    viewOfStoryTimeline.forEach((content, idx) => {
+        let timeNode = content.timeNode.replace(/\(.*?\)/g, '');
+        if (timeNode === nodeName) {
+            timelineScript.textContent = content.script;
+            if (idx + 1 < viewOfStoryTimeline.length) {
+                if (timelineScriptNext.style.display === "none") {
+                    timelineScriptNext.style.display = "block";
+                    timelineScript.style.width = '630px';
+                    timelineScript.style.borderRight = '1px solid #ccc';
+                }
+                timelineScriptNext.textContent = viewOfStoryTimeline[idx + 1].script;
+            } else {
+                timelineScriptNext.textContent = "";
+                timelineScriptNext.style.display = "none";
+                timelineScript.style.width = '1260px';
+                timelineScript.style.borderRight = 'none';
+            }
+        }
+    });
+
 
     // check if the timeline node is out of the screen
     moveToLeft();
@@ -135,5 +157,6 @@ function findClosestMatch(matches, timelineIndex) {
         return filteredMatchesDown[0];
     }
 }
+
 
 export default updateBubbleChartTimeline;

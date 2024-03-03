@@ -438,7 +438,9 @@ function _moveHandle({ leftHandInfo, rightHandInfo }, state) {
                 if (distance < 100) {
                     state.myChart.clear();
                     const legendCon = document.getElementById('legend-container');
-                    legendCon.style.display = 'none';
+                    if (legendCon) {
+                        legendCon.style.display = 'none';
+                    }
                 }
             }
         }

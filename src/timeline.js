@@ -38,7 +38,7 @@ function createTimeline(page) {
     timelineContainer.style.height = "150px";
     timelineMoreInfoBtn.style.display = "none";
     timelineLessInfobtn.style.display = "inline-block";
-    timelineScriptContainer.style.display = "block";
+    timelineScriptContainer.style.display = "flex";
   });
 
   return viewOfStoryTimeline;
