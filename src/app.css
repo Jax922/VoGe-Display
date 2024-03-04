@@ -1,4 +1,7 @@
 
+body {
+  background-color: #F5DEC2;
+}
 
   #debug-info {
     position: absolute;
@@ -67,7 +70,10 @@
     font-weight: bold;
     display: flex; 
     align-items: center;
-    padding: 10px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    font-family: "Krungthep";
 }
 
 .logo img {
@@ -78,7 +84,7 @@
 .logo span {
   vertical-align: middle;
   flex-grow: 1;
-  margin-left: 10px;
+  margin-left: 5px;
 }
 
 .controls {

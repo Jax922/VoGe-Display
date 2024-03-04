@@ -5,12 +5,14 @@ let mediaRecorder;
 let recordedBlobs;
 let startTime;
 let recordInterval;
+let canDraw = true;
+let draw = null;
 
 const video = document.getElementById('video');
 const recordInfo = document.getElementById('record-info');
 const recordTime = document.getElementById('record-time');
 const startButton = document.getElementById('record-play');
-const pauseButton = document.getElementById('record-pause');
+const pauseButton = document.getElementById('recordButtonPause');
 const stopButton = document.getElementById('record-stop');
 const recordBtn = document.getElementById("recordButton");
 const chartElem = document.getElementById('chart-container');
@@ -67,8 +69,8 @@ function controlsEvent(myChart) {
             _setSvgElementColor('gray');
         } else {
             timelineContainer.style.display = 'block';
-            timelineBtn.style.color = '#0056b3';
-            _setSvgElementColor('#0056b3');
+            timelineBtn.style.color = '#80B2D6';
+            _setSvgElementColor('#80B2D6');
         }
     });
 
@@ -76,7 +78,7 @@ function controlsEvent(myChart) {
         const status = debugBtn.getAttribute('data-status');
         if (status === 'off') {
             debugBtn.setAttribute('data-status', 'on');
-            debugBtn.style.color = '#0056b3';
+            debugBtn.style.color = '#80B2D6';
             document.getElementById('debug-info').style.display = 'block';
             localStorage.setItem('debugActive', 'true');
             document.querySelectorAll('.debug-point').forEach((elem) => {
@@ -101,9 +103,8 @@ function controlsEvent(myChart) {
                 return;
             }
             recordBtn.setAttribute('data-status', 'on');
-            recordBtn.style.color = '#0056b3';
+            // recordBtn.style.color = '#80B2D6';
             _countDown(myChart);
-            
             // document.getElementById('record-info').style.display = 'block';
         } else {
             // recordBtn.setAttribute('data-status', 'off');
@@ -111,21 +112,24 @@ function controlsEvent(myChart) {
             // document.getElementById('record-info').style.display = 'none';
             const recordPlay = document.getElementById("record-play");
             const recordPause = document.getElementById("record-pause");
-
             const isOnGoing = recordBtn.getAttribute('record-status') === 'ongoing';
             if (isOnGoing) {
                 // want to pause
-                recordPlay.style.display = 'flex';
-                recordPause.style.display = 'none';
-                recordBtn.setAttribute('record-status', 'pause');
-                _recordPause();
+
+
             } else {
                 // want to play
-                recordPlay.style.display = 'none';
-                recordPause.style.display = 'flex';
+                pauseButton.style.display = 'flex';
                 recordBtn.setAttribute('record-status', 'ongoing');
-                _recordPause();
+                recordBtn.style.display = 'none';
+                mediaRecorder.resume();
+                canDraw = true;
+                requestAnimationFrame(draw); 
+                startTime = Date.now() - (parseInt(recordTime.textContent) * 1000);
+                recordInterval = setInterval(updateRecordTime, 1000);
+                // captureVideoAndChart(myChart);
             }
+            
             
 
             // 
@@ -135,6 +139,14 @@ function controlsEvent(myChart) {
     stopButton.addEventListener('click', () => {
         _recordStop();
     });
+
+    pauseButton.addEventListener('click', () => {
+        _recordPause();
+        recordBtn.style.display = 'flex';
+        pauseButton.style.display = 'none';
+        recordBtn.setAttribute('record-status', 'pause');
+        canDraw = false;
+    })
 
 }
 
@@ -159,15 +171,18 @@ function _countDown(myChart){
 
 function _startRecord(myChart) {
     const recordBtn = document.getElementById("recordButton");
+    const pauseBtn = document.getElementById("recordButtonPause");
+    recordBtn.style.display = 'none';
     recordBtn.setAttribute('have-record', 'yes');
     recordBtn.setAttribute('record-status', 'ongoing');
-    const recordPlay = document.getElementById("record-play");
-    const recordPause = document.getElementById("record-pause");
+    // const recordPlay = document.getElementById("record-play");
+    // const recordPause = document.getElementById("record-pause");
     const recordStop = document.getElementById("record-stop");
     const recordInfo = document.getElementById("record-info");
 
-    recordPlay.style.display = 'none';
-    recordPause.style.display = 'flex';
+    // recordPlay.style.display = 'none';
+    // recordPause.style.display = 'flex';
+    pauseBtn.style.display = 'flex';
 
     recordInfo.style.display = 'flex';
     recordStop.style.display = 'flex';
@@ -334,7 +349,10 @@ async function captureVideoAndChart(myChart) {
         console.error('MediaRecorder error:', event);
     };
 
-    function draw() {
+    draw = function () {
+        if (!canDraw) {
+            return;
+        }
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -361,10 +379,12 @@ async function captureVideoAndChart(myChart) {
         updateChartImage();
         // chartImage.onload = function() {  };
         // chartImage.src = myChart.getDataURL();
-        requestAnimationFrame(draw); // 持续绘制
+        requestAnimationFrame(draw); 
     }
 
-    draw(); 
+    if (draw) {
+        draw(); 
+    }
     mediaRecorder.start(1);
     console.log('MediaRecorder started', mediaRecorder);
     startTime = Date.now();
@@ -393,12 +413,16 @@ function _recordStop() {
     // video.srcObject = null;
 
     recordInfo.style.display = 'none';
-    startButton.style.display = 'flex';
+    // startButton.style.display = 'flex';
+
     pauseButton.style.display = 'none';
+    recordBtn.style.display = 'flex';
     recordBtn.style.color = 'gray';
     recordBtn.setAttribute('data-status', 'off');
+    recordBtn.style.display = 'flex';
     recordTime.textContent = 0;
     stopButton.style.display = 'none';
+
 
     const blob = new Blob(recordedBlobs, { type: 'video/webm' });
     const url = URL.createObjectURL(blob);
@@ -409,6 +433,8 @@ function _recordStop() {
     a.download = 'recordedVideo.webm';
     document.body.appendChild(a);
     a.click();
+
+    canDraw = true;
 
     setTimeout(() => {
         document.body.removeChild(a);
