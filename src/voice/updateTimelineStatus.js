@@ -151,7 +151,7 @@ function checkYAxis(chartOption, viewOfStoryTimeline) {
 
 function checkDataElement(nodeName, chartOption, viewOfStoryTimeline, text) {
     let idx = -1;
-    nodeName = nodeName.replace(/\(.*?\)/g, '');
+    nodeName = nodeName.replace(/\(.*?\)/gs, '');
 
     if(!text.toLowerCase().includes(nodeName.toLowerCase())) {
         return false;
@@ -207,10 +207,10 @@ function updateTimelineNodeStyle(nodeName, viewOfStoryTimeline) {
     timelineNodeLabels.forEach(item => {
         item.classList.remove("timeline-node-label-highlight");
     })
-    nodeName = nodeName.replace(/\(.*?\)/g, '');
+    nodeName = nodeName.replace(/\(.*?\)/gs, '');
     timelineNodeItems.forEach((item, idx) => {
         // remove paraphrase
-        let text = item.textContent.replace(/\(.*?\)/g, '');
+        let text = item.textContent.replace(/\(.*?\)/gs, '');
         if (text.toLowerCase() === nodeName.toLowerCase()) {
             item.classList.add("timeline-node-highlight");
             item.classList.remove("timeline-node-future");
@@ -223,7 +223,7 @@ function updateTimelineNodeStyle(nodeName, viewOfStoryTimeline) {
     // console.log("update script", viewOfStoryTimeline);
 
     viewOfStoryTimeline.forEach((content, idx) => {
-        let timeNode = content.timeNode.replace(/\(.*?\)/g, '');
+        let timeNode = content.timeNode.replace(/\(.*?\)/gs, '');
         if (timeNode === nodeName) {
             timelineScript.textContent = content.script;
             if (idx + 1 < viewOfStoryTimeline.length) {

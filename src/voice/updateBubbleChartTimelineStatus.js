@@ -82,7 +82,7 @@ function updateTimelineNodeStyle(nodeName, viewOfStoryTimeline) {
     })
 
     viewOfStoryTimeline.forEach((content, idx) => {
-        let timeNode = content.timeNode.replace(/\(.*?\)/g, '');
+        let timeNode = content.timeNode.replace(/\(.*?\)/gs, '');
         if (timeNode === nodeName) {
             timelineScript.textContent = content.script;
             if (idx + 1 < viewOfStoryTimeline.length) {
