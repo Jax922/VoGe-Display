@@ -364,6 +364,7 @@ if ('webkitSpeechRecognition' in window) {
   
 } else {
   console.log('Speech recognition not supported');
+  alert('Speech recognition not supported');  
 }
 
 

@@ -95,9 +95,11 @@ function _gestureHandleEntry(gestures, state) {
 function isInChartArea(x, y) {
     const chartContainer = document.getElementById('chart-container');
     const chartRect = chartContainer.getBoundingClientRect();
-    const left = chartRect.left - 20;
+    const windowWidth = window.innerWidth;
+    const windowOffsetLeft = (windowWidth - 1280) / 2;
+    const left = chartRect.left - 20 - windowOffsetLeft;
     const top = chartRect.top - 70;
-    const right = chartRect.right + 20;
+    const right = chartRect.right + 20 - windowOffsetLeft;
     const bottom = chartRect.bottom + 20;
     if (x >= left && x <= right && y >= top && y <= bottom) {
         return true;
