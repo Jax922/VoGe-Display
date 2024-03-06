@@ -15,16 +15,21 @@ function updateBubbleChartTimeline(chartCurrentOption, viewOfStoryTimeline, text
         }
     })
 
-    if (chartCurrentOption.customOption.x_axis_show) {
+    let isXaxis = true;
+    let isYaxis = true;
+
+    if (chartCurrentOption.customOption.x_axis_show && chartCurrentOption.customOption.timelineNodeIdx < 1) {
         updateTimelineNodeStyle("X-Axis", viewOfStoryTimeline);
         // timelineScript.textContent = viewOfStoryTimeline[1].script;
         chartCurrentOption.customOption.timelineNodeIdx = 1;
+        isXaxis = false;
     }
 
-    if (chartCurrentOption.customOption.y_axis_show) {
+    if (chartCurrentOption.customOption.y_axis_show && chartCurrentOption.customOption.timelineNodeIdx < 2) {
         updateTimelineNodeStyle("Y-Axis", viewOfStoryTimeline);
         // timelineScript.textContent = viewOfStoryTimeline[2].script;
         chartCurrentOption.customOption.timelineNodeIdx = 2;
+        isYaxis = false;
     }
 
     let matches = [];
@@ -109,7 +114,7 @@ function updateTimelineNodeStyle(nodeName, viewOfStoryTimeline) {
 function moveToLeft(){
     const timelineNodeItems = document.querySelectorAll('.timeline-node');
 
-    if(timelineNodeItems.length <= 10) {
+    if(timelineNodeItems.length <= 7) {
         return;
     }
 

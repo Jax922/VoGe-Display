@@ -47,6 +47,7 @@ function createTimeline(page) {
 function createTimelineNode(nodeName, idx) {
   var node = document.createElement("div");
   node.classList.add("timeline-node");
+  node.style.margin = "0 80px";
 
   // node.style.marginLeft = "30px";
   // node.style.width = "200px";

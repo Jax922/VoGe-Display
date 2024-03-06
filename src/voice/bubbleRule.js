@@ -4,6 +4,8 @@ import ALIAS from "./alias";
 import updateBubbleChartTimeline from "./updateBubbleChartTimelineStatus";
 import NLU from "../nlu/nlu";
 
+let aliasData = [];
+
 const xAxis = [
     "x axis",
     "x-axis",
@@ -74,6 +76,7 @@ function basicParser(text, chartOriginOption, chartCurrentOption, myChart, viewO
     _updateKeyWords(baseOption);
     _updateLegends(chartOriginOption);
     _updateLegendsColor(chartOriginOption);
+    _updateALIAS(chartOriginOption);
     console.log("legends==========>", legends);
     console.log("legendsColor==========>", legendsColor);
     console.log("singleDataItems==========>", singleDataItems);
@@ -212,6 +215,22 @@ function _updateLegends(chartOriginOption) {
             firstShowSeries.push(element);
         });
     }
+}
+
+function _updateALIAS(chartOriginOption) {
+    aliasData = [];
+    const years = chartOriginOption.baseOption.timeline.data || [];
+
+    years.forEach((year, idx) => {
+        year = String(year);
+        year = year.replace(/\r/g, "");
+        let res = aliasData.find(item => item.name == String(year));
+        if (res) {
+            aliasData.push(res);
+        } else {
+            aliasData.push({name: String(year), alias: []});
+        }
+    })
 }
 
 function _updateLegendsColor(chartOriginOption) {
@@ -542,7 +561,7 @@ function _pause(myChart, text) {
 
     let serieId = -1;
 
-    ALIAS.yearAlias.forEach((item, idx) => {
+    aliasData.forEach((item, idx) => {
         let aliasArray = item.alias || [];
         let isMatchAlias = aliasArray.some(elem => text.includes(elem));
         if(text.includes(item.name) || isMatchAlias) {
@@ -647,12 +666,12 @@ function containsAtLeastTwoWords(str1, str2) {
 }
 
 function _goBack(text, chartOriginOption, chartCurrentOption, myChart) {
-    const keywords = ["back", "go back", "backing", "rewind", "rewinding", "backing to", "go back to", "back to", "Jump to", "Move", "Move to the year of", "Jump to the year of", "Go to the year of"]
+    const keywords = ["back", "go back", "backing", "rewind", "rewinding", "backing to", "go back to", "back to", "Jump to", "Move", "Move to the year of", "Jump to the year of", "Go to the year of", "jump to"]
     if (text == "") {
         return;
     }
 
-    if (keywords.some(element => text.includes(element))) {
+    if (keywords.some(element => text.toLowerCase().includes(element.toLowerCase()))) {
         _autoReunite(chartOriginOption, chartCurrentOption, myChart);
         _gotoSpecificYear(text, chartOriginOption, chartCurrentOption, myChart)
         return true;
@@ -664,7 +683,8 @@ function _goBack(text, chartOriginOption, chartCurrentOption, myChart) {
 function _gotoSpecificYear(text, chartOriginOption, chartCurrentOption, myChart) {
     let serieId = -1;
 
-        ALIAS.yearAlias.forEach((item, idx) => {
+        aliasData.forEach((item, idx) => {
+            
             let aliasArray = item.alias || [];
             let isMatchAlias = aliasArray.some(elem => text.includes(elem));
             if(text.includes(item.name) || isMatchAlias) {
