@@ -83,12 +83,12 @@ function renderChart(option, myChart) {
     } else {
       viewOfStoryTimeline = bubbleTimeline.createTimeline(pageOriginData.pages[pageState.pageIndex]);// create timeline info
       myChart.on('timelinechanged', function (params) {
-          if (params.currentIndex == 80) {
-            myChart.dispatchAction({
-              type: 'timelinePlayChange',
-              playState: false,
-            });
-          }
+          // if (params.currentIndex == 80) {
+          //   myChart.dispatchAction({
+          //     type: 'timelinePlayChange',
+          //     playState: false,
+          //   });
+          // }
       });
     }
 

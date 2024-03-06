@@ -144,6 +144,9 @@ function _set_x_axis_show(chartOriginOption, chartCurrentOption, myChart) {
     chartCurrentOption.baseOption.series = JSON.parse(JSON.stringify(chartOriginOption.baseOption.series));
     chartCurrentOption.baseOption["animationDurationUpdate"] = chartOriginOption.baseOption["animationDurationUpdate"] || 1000;
     chartCurrentOption.baseOption["animationEasingUpdate"] = chartOriginOption.baseOption["animationEasingUpdate"] || "quinticInOut";
+    if (chartOriginOption.baseOption["color"]) {
+        chartCurrentOption.baseOption["color"] = chartOriginOption.baseOption["color"];
+    }
 
     setOption(myChart, chartCurrentOption);
 }
@@ -182,6 +185,9 @@ function _set_y_axis_show(chartOriginOption, chartCurrentOption, myChart) {
     chartCurrentOption["options"] = chartCurrentOption["options"] || [];
     chartCurrentOption.baseOption["grid"] = chartOriginOption.baseOption["grid"] || defaultGrid;
     chartCurrentOption.baseOption["tooltip"] = chartOriginOption.baseOption["tooltip"] || {};
+    if (chartOriginOption.baseOption["color"]) {
+        chartCurrentOption.baseOption["color"] = chartOriginOption.baseOption["color"];
+    }
 
     setOption(myChart, chartCurrentOption);
 }
@@ -603,9 +609,9 @@ function _yearNameShow(text, chartOriginOption, chartCurrentOption, myChart){
         return;
     }
 
-    const year1800 = ["1800", "eighteen hundred", "eighteen hundredth", "eighteen hundreds"];
+    const year1900 = ["1900", "nineteen hundred", "nineteen hundredth", "nineteen hundreds"];
 
-    if(!year1800.some(element => text.includes(element))) {
+    if(!year1900.some(element => text.includes(element))) {
         return;
     }
     
@@ -877,11 +883,11 @@ function _reunite(chartOriginOption, chartCurrentOption, myChart){
     chartCurrentOption.baseOption.series.pop();
 
     setOption(myChart, chartCurrentOption, true);
-    myChart.dispatchAction({
-        type: 'timelineChange',
-        currentIndex: 80
-    });
-    _autoPause(myChart);
+    // myChart.dispatchAction({
+    //     type: 'timelineChange',
+    //     currentIndex: 80
+    // });
+    // _autoPause(myChart);
 }
 function _nlu_parse(text, chartOriginOption, chartCurrentOption, myChart) {
     return (async () => {
