@@ -192,7 +192,16 @@ function _auto_goto_data_context(chartOption) {
     if(chartOption.xAxis && chartOption.xAxis.axisLine && chartOption.xAxis.axisLine.show) {
         if (chartOption.xAxis.axisLabel && chartOption.xAxis.axisLabel.show) {
             if (chartOption.xAxis.data && chartOption.xAxis.data.length >= xLabels.length) {
-                chartOption.customOption["voiceContext"] = "data-elem";
+
+                if (localStorage.getItem("yAxisMode") == "splitAxis") {
+                    if (chartOption.yAxis && chartOption.yAxis.axisLine && chartOption.yAxis.axisLine.show) {
+                        if (chartOption.yAxis.axisLabel && chartOption.yAxis.axisLabel.show) {
+                            chartOption.customOption["voiceContext"] = "data-elem";
+                        }
+                    }
+                } else {
+                    chartOption.customOption["voiceContext"] = "data-elem";
+                }
             }   
         }
     }
@@ -458,12 +467,14 @@ function _isShowYAxisLabel(text, chartOriginOption, chartCurrentOption, myChart)
     if (chartCurrentOption.customOption && !chartOriginOption.customOption["yAxis"]) {
         return;
     }
+    // 
+    let keywords = [...yLabels, "label", "labels", "Label", "Labels", "value", "Value"] 
 
-    const isShowYAxisLabel = yLabels.some(element => text.includes(element));
+    const isShowYAxisLabel = keywords.some(element => text.includes(element));
 
     if (isShowYAxisLabel) {
         let showIdx = -1;
-        yLabels.forEach((item, index) => {
+        keywords.forEach((item, index) => {
             if (typeof item === "string") {
                 item = item.toLowerCase();
             }
@@ -474,6 +485,9 @@ function _isShowYAxisLabel(text, chartOriginOption, chartCurrentOption, myChart)
 
         if (showIdx !== -1) {
             chartCurrentOption["yAxis"]["axisLabel"]["show"] = true;
+            let numbers = yLabels.map(item => Number(item));
+            chartCurrentOption["yAxis"]["min"] = Math.min(Math.min(...numbers), 0);
+            chartCurrentOption["yAxis"]["max"] = Math.max(...numbers);
             // chartCurrentOption["yAxis"]["data"] = chartOriginOption["yAxis"]["data"].slice(0, showIdx + 1);
             setOption(myChart, chartCurrentOption);
         }

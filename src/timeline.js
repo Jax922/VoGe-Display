@@ -96,12 +96,12 @@ const handleViewOfStoryTimeline = (storyTimeline, isImmediate) => {
               });
           }
           if (node.nodeName === "X-Axis") {
-              // if(node.mode === "splitAxis" && !isImmediate) {
-              //     localStorage.setItem('xAxisMode', 'splitAxis');
-              //     node.contents.forEach(content => {
-              //         viewOfStoryTimeline.push(content);
-              //     });
-              // } else { // combineAxis
+              if(node.mode === "splitAxis" && !isImmediate) {
+                  localStorage.setItem('xAxisMode', 'splitAxis');
+                  node.contents.forEach(content => {
+                      viewOfStoryTimeline.push(content);
+                  });
+              } else { // combineAxis
               if(node.mode === "splitAxis"){
                 localStorage.setItem('xAxisMode', 'splitAxis');
               } else {
@@ -115,15 +115,15 @@ const handleViewOfStoryTimeline = (storyTimeline, isImmediate) => {
                       script: node.contents.map(content => content.script).join("\n")
                   }
                   viewOfStoryTimeline.push(content);
-              // }
+              }
           }
           if (node.nodeName === "Y-Axis") {
-              // if(node.mode === "splitAxis" && !isImmediate) {
-              //     localStorage.setItem('yAxisMode', 'splitAxis');
-              //     node.contents.forEach(content => {
-              //         viewOfStoryTimeline.push(content);
-              //     });
-              // } else { // combineAxis
+              if(node.mode === "splitAxis" && !isImmediate) {
+                  localStorage.setItem('yAxisMode', 'splitAxis');
+                  node.contents.forEach(content => {
+                      viewOfStoryTimeline.push(content);
+                  });
+              } else { // combineAxis
               if(node.mode === "splitAxis"){
                 localStorage.setItem('yAxisMode', 'splitAxis');
               } else {
@@ -137,7 +137,7 @@ const handleViewOfStoryTimeline = (storyTimeline, isImmediate) => {
                       script: node.contents.map(content => content.script).join("\n")
                   }
                   viewOfStoryTimeline.push(content);
-              // }
+              }
           }
           if (node.nodeName === "Data Element") {
               node.contents.forEach(content => {
