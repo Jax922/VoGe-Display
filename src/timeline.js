@@ -14,6 +14,8 @@ function createTimeline(page) {
   const storyTimeline = page.storyTimeline;
   const optionData = JSON.parse(page.data);
   const viewOfStoryTimeline = handleViewOfStoryTimeline(storyTimeline, optionData.customOption.mode == "immediate");
+  _checkYaxisInTimeline(storyTimeline);
+  _checkXaxisInTimeline(storyTimeline);
 
   console.log("storyTimeline", storyTimeline);
 
@@ -154,5 +156,19 @@ const handleViewOfStoryTimeline = (storyTimeline, isImmediate) => {
   });
   return viewOfStoryTimeline;
 }
+
+
+function _checkYaxisInTimeline(storyTimeline) {
+  const isHave = storyTimeline.some(node => node.nodeName === "Y-Axis" && node.isShow);
+  console.log("isYaxisHave", isHave);
+  localStorage.setItem('isHaveYAxis', isHave);
+}
+
+function _checkXaxisInTimeline(storyTimeline) {
+  const isHave = storyTimeline.some(node => node.nodeName === "X-Axis" && node.isShow);
+  console.log("isXaxisHave", isHave);
+  localStorage.setItem('isHaveXAxis', isHave);
+}
+
 
 export default createTimeline;

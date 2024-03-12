@@ -82,6 +82,13 @@ function basicParser(text, chartOriginOption, chartCurrentOption, myChart, viewO
 
     chartCurrentOption.customOption = chartCurrentOption.customOption || {};
 
+    const isHaveXAxis = localStorage.getItem("isHaveXAxis") === "true";
+    const isHaveYAxis = localStorage.getItem("isHaveYAxis") === "true";
+
+    if (!isHaveXAxis && !isHaveYAxis) {
+        _auto_goto_data_context(chartCurrentOption);
+    }
+
     if (!chartCurrentOption.customOption["voiceContext"]) {
         chartCurrentOption.customOption["voiceContext"] = "Unknown";
         if (chartOriginOption.customOption.mode === "immediate") {
@@ -134,6 +141,9 @@ function basicParser(text, chartOriginOption, chartCurrentOption, myChart, viewO
     }
 
     if (chartCurrentOption.customOption["voiceContext"] === "data-elem") {
+        // auto complete the x-axis and y-axis option
+        _auto_complete_axis_option(chartOriginOption, chartCurrentOption, myChart);
+
          // show data elements detection
         let showDataElem = _isDataElemExist(chartCurrentOption, text, myChart);
 
@@ -185,26 +195,64 @@ function _updateKeyWords(chartOriginOption) {
 }
 
 function _auto_goto_data_context(chartOption) {
-    if (!chartOption.xAxis) {
-        return; 
-    }
+    const isHaveXAxis = localStorage.getItem("isHaveXAxis") === "true";
+    const isHaveYAxis = localStorage.getItem("isHaveYAxis") === "true";
 
-    if(chartOption.xAxis && chartOption.xAxis.axisLine && chartOption.xAxis.axisLine.show) {
-        if (chartOption.xAxis.axisLabel && chartOption.xAxis.axisLabel.show) {
-            if (chartOption.xAxis.data && chartOption.xAxis.data.length >= xLabels.length) {
-
-                if (localStorage.getItem("yAxisMode") == "splitAxis") {
-                    if (chartOption.yAxis && chartOption.yAxis.axisLine && chartOption.yAxis.axisLine.show) {
-                        if (chartOption.yAxis.axisLabel && chartOption.yAxis.axisLabel.show) {
-                            chartOption.customOption["voiceContext"] = "data-elem";
-                        }
-                    }
-                } else {
-                    chartOption.customOption["voiceContext"] = "data-elem";
-                }
-            }   
+    if (isHaveXAxis) {
+        if (!chartOption.xAxis) {
+            return; 
         }
     }
+
+
+    
+    if (isHaveXAxis && isHaveYAxis) { 
+        if(chartOption.xAxis && chartOption.xAxis.axisLine && chartOption.xAxis.axisLine.show) {
+            if (chartOption.xAxis.axisLabel && chartOption.xAxis.axisLabel.show) {
+                if (chartOption.xAxis.data && chartOption.xAxis.data.length >= xLabels.length) {
+
+                    if (localStorage.getItem("yAxisMode") == "splitAxis") {
+                        if (chartOption.yAxis && chartOption.yAxis.axisLine && chartOption.yAxis.axisLine.show) {
+                            if (chartOption.yAxis.axisLabel && chartOption.yAxis.axisLabel.show) {
+                                chartOption.customOption["voiceContext"] = "data-elem";
+                            }
+                        }
+                    } else {
+                        chartOption.customOption["voiceContext"] = "data-elem";
+                    }
+                }   
+            }
+        }
+    }
+
+    if (isHaveXAxis && !isHaveYAxis) {
+        if(chartOption.xAxis && chartOption.xAxis.axisLine && chartOption.xAxis.axisLine.show) {
+            if (chartOption.xAxis.axisLabel && chartOption.xAxis.axisLabel.show) {
+                if (chartOption.xAxis.data && chartOption.xAxis.data.length >= xLabels.length) {
+                    chartOption.customOption["voiceContext"] = "data-elem";
+                }
+            }
+        }
+    }
+
+    if (!isHaveXAxis && isHaveYAxis) {
+        if (localStorage.getItem("yAxisMode") == "splitAxis") {
+            if (chartOption.yAxis && chartOption.yAxis.axisLine && chartOption.yAxis.axisLine.show) {
+                if (chartOption.yAxis.axisLabel && chartOption.yAxis.axisLabel.show) {
+                    chartOption.customOption["voiceContext"] = "data-elem";
+                }
+            }
+        } else {
+            if (chartOption.yAxis && chartOption.yAxis.axisLine && chartOption.yAxis.axisLine.show) {
+                chartOption.customOption["voiceContext"] = "data-elem";
+            }
+        }
+    }
+
+    if (!isHaveXAxis && !isHaveYAxis) {
+        chartOption.customOption["voiceContext"] = "data-elem";
+    }
+
 }
 
 function _nonContextInteraction(text, chartOriginOption, chartCurrentOption, myChart) {
@@ -783,8 +831,9 @@ function _showBarDataElements(chartOriginOption, chartCurrentOption, myChart, ma
         let dataCopy = serie.data[match.index];
         let serieCopy = JSON.parse(JSON.stringify(serie));
 
+        let tempList = chartCurrentOption["series"][0].data || [];
 
-        serieCopy.data = chartCurrentOption["series"] && chartCurrentOption["series"].length > 0 ? chartCurrentOption["series"][0].data : [];
+        serieCopy.data = chartCurrentOption["series"] && chartCurrentOption["series"].length > 0 ? tempList : [];
         serieCopy.data[match.index] = dataCopy;
 
         // let isFind = false;
@@ -882,5 +931,23 @@ function _showLineDataMoreElements(chartOriginOption, chartCurrentOption, myChar
  
     setOption(myChart, chartCurrentOption);
 }
+
+function _auto_complete_axis_option(chartOriginOption, chartCurrentOption, myChart) {
+    // x-axis
+    if (!chartCurrentOption["xAxis"] || !chartCurrentOption["xAxis"]["axisLine"] || !chartCurrentOption["xAxis"]["axisLine"]["show"]) {
+        chartCurrentOption["xAxis"] = JSON.parse(JSON.stringify(chartOriginOption["xAxis"]));
+    }
+
+    // y-axis
+    if (!chartCurrentOption["yAxis"] || !chartCurrentOption["yAxis"]["axisLine"] || !chartCurrentOption["yAxis"]["axisLine"]["show"]) {
+        chartCurrentOption["yAxis"] = JSON.parse(JSON.stringify(chartOriginOption["yAxis"]));
+    }
+
+    // title
+    if (!chartCurrentOption.title) {
+        chartCurrentOption.title = chartOriginOption.title;
+    }
+}
+
 
 export default { basicParser }
