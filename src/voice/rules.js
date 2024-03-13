@@ -831,7 +831,10 @@ function _showBarDataElements(chartOriginOption, chartCurrentOption, myChart, ma
         let dataCopy = serie.data[match.index];
         let serieCopy = JSON.parse(JSON.stringify(serie));
 
-        let tempList = chartCurrentOption["series"][0].data || [];
+        let tempList = chartCurrentOption["series"][0] ? chartCurrentOption["series"][0].data : [];
+        if (!tempList) {
+            tempList = [];
+        }
 
         serieCopy.data = chartCurrentOption["series"] && chartCurrentOption["series"].length > 0 ? tempList : [];
         serieCopy.data[match.index] = dataCopy;
